@@ -2418,7 +2418,10 @@
     "task-list": "작업 목록",
     "new-feature": "신규",
     "collections": "컬렉션",
-    "spreadsheet": "스프레드시트"
+    "spreadsheet": "스프레드시트",
+    "note-types": "노트 유형",
+    "built-in-templates": "기본 제공 템플릿",
+    "selector-save": "저장"
   },
   "protect_note": {
     "toggle-on": "노트 보호",
@@ -2617,7 +2620,10 @@
   "search_result": {
     "no_notes_found": "주어진 검색 매개변수에 대한 노트는 발견되지 않았습니다.",
     "search_not_executed": "아직 수색은 실행되지 않았습니다.",
-    "search_now": "지금 검색"
+    "search_now": "지금 검색",
+    "result_count_other": "{{count}}개 결과",
+    "page_size": "페이지당",
+    "snippet_unavailable": "미리보기를 사용할 수 없습니다."
   },
   "sql_result": {
     "not_executed": "쿼리는 아직 실행되지 않았습니다.",
@@ -3241,7 +3247,7 @@
     "card-count_other": "{{count}}개 항목",
     "card-count-with-archived_other": "활성 항목 {{count}}개, 보관된 항목 {{archived}}개",
     "collapse-column": "열 접기",
-    "edit-title": "제목 편집",
+    "edit-title": "제목 및 아이콘 편집",
     "move-to-top": "맨 위로 이동",
     "create-new-note": "노트 생성",
     "create-new-column": "열 생성",
@@ -3251,7 +3257,18 @@
     "create-column-at-start": "맨 앞에 열 생성",
     "create-column-at-end": "맨 끝에 열 생성",
     "keep-column-collapsed": "열을 접은 상태로 유지",
-    "collapse-hint": "두 번 클릭하여 접기"
+    "collapse-hint": "두 번 클릭하여 접기",
+    "more-columns": "더 많은 상태…",
+    "collapse-all-columns": "모든 열 접기",
+    "expand-all-columns": "모든 열 펼치기",
+    "show-inbox-column": "받은 편지함 열 표시",
+    "show-archived-notes": "보관된 노트 표시",
+    "customize-templates": "카드 템플릿 사용자 지정",
+    "more-templates": "더 많은 템플릿…",
+    "card-template": "카드 템플릿 선택",
+    "templates-title": "이 보드에서 제공되는 템플릿",
+    "templates-hint": "새 카드를 만들 때 사용할 템플릿을 선택하세요. 최소 하나는 필요합니다.",
+    "change-note-icon": "아이콘 변경"
   },
   "dashboard_view": {
     "refresh-widget": "새로 고침",
