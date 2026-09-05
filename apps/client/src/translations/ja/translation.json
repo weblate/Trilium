@@ -730,7 +730,7 @@
     "limit-capacity": "列の容量超過時に警告する",
     "limit-count": "列内の最大ノート数",
     "collapse-column": "列を折りたたむ",
-    "edit-title": "タイトルを編集",
+    "edit-title": "タイトルとアイコンを編集",
     "move-to-top": "一番上へ移動",
     "create-new-note": "ノートを作成",
     "create-new-column": "列を作成",
@@ -740,7 +740,18 @@
     "create-column-at-start": "先頭に列を作成",
     "create-column-at-end": "末尾に列を作成",
     "keep-column-collapsed": "列を折りたたんだままにする",
-    "collapse-hint": "ダブルクリックで折りたたむ"
+    "collapse-hint": "ダブルクリックで折りたたむ",
+    "more-columns": "その他のステータス…",
+    "collapse-all-columns": "すべての列を折りたたむ",
+    "expand-all-columns": "すべての列を展開",
+    "show-inbox-column": "インボックス列を表示",
+    "show-archived-notes": "アーカイブされたノートを表示",
+    "customize-templates": "カードテンプレートをカスタマイズ",
+    "more-templates": "その他のテンプレート…",
+    "card-template": "カードテンプレートを選択",
+    "templates-title": "このボードで利用可能なテンプレート",
+    "templates-hint": "新しいカードの作成元となるテンプレートを選択してください。少なくとも 1 つ必要です。",
+    "change-note-icon": "アイコンを変更"
   },
   "code_buttons": {
     "execute_button_title": "スクリプトを実行",
@@ -823,7 +834,10 @@
     "ai-chat": "AI チャット",
     "spreadsheet": "スプレッドシート",
     "llm-chat": "AI チャット",
-    "markdown": "マークダウン"
+    "markdown": "マークダウン",
+    "note-types": "ノートタイプ",
+    "built-in-templates": "組み込みテンプレート",
+    "selector-save": "保存"
   },
   "edited_notes": {
     "no_edited_notes_found": "この日の編集されたノートはまだありません...",
@@ -1726,7 +1740,10 @@
   "search_result": {
     "no_notes_found": "指定された検索パラメータに該当するノートは見つかりませんでした。",
     "search_not_executed": "検索はまだ実行されていません。",
-    "search_now": "今すぐ検索"
+    "search_now": "今すぐ検索",
+    "result_count_other": "{{count}} 件の結果",
+    "page_size": "1 ページあたりの表示数",
+    "snippet_unavailable": "プレビューは利用できません。"
   },
   "sql_result": {
     "no_rows": "このクエリでは行が返されませんでした",
