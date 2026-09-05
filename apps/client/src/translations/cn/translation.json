@@ -1984,7 +1984,10 @@
     "ai-chat": "AI对话",
     "spreadsheet": "电子表格",
     "llm-chat": "AI对话",
-    "markdown": "Markdown"
+    "markdown": "Markdown",
+    "note-types": "笔记类型",
+    "built-in-templates": "内置模板",
+    "selector-save": "保存"
   },
   "protect_note": {
     "toggle-on": "保护笔记",
@@ -2085,7 +2088,10 @@
   "search_result": {
     "no_notes_found": "没有找到符合搜索条件的笔记。",
     "search_not_executed": "尚未执行搜索。",
-    "search_now": "立即搜索"
+    "search_now": "立即搜索",
+    "result_count_other": "{{count}} 个结果",
+    "page_size": "每页",
+    "snippet_unavailable": "无法预览。"
   },
   "sql_result": {
     "no_rows": "此查询没有返回任何数据",
@@ -2530,7 +2536,7 @@
     "limit-capacity": "超出列容量时发出警告",
     "limit-count": "列中笔记的最大数量",
     "collapse-column": "折叠列",
-    "edit-title": "编辑标题",
+    "edit-title": "编辑标题与图标",
     "move-to-top": "移到顶部",
     "create-new-note": "新建笔记",
     "create-new-column": "新建列",
@@ -2540,7 +2546,18 @@
     "create-column-at-start": "在开头新建列",
     "create-column-at-end": "在末尾新建列",
     "keep-column-collapsed": "保持列折叠",
-    "collapse-hint": "双击以折叠"
+    "collapse-hint": "双击以折叠",
+    "more-columns": "更多状态…",
+    "collapse-all-columns": "折叠所有列",
+    "expand-all-columns": "展开所有列",
+    "show-inbox-column": "显示收件箱列",
+    "show-archived-notes": "显示已归档笔记",
+    "customize-templates": "自定义卡片模板",
+    "more-templates": "更多模板…",
+    "card-template": "选择卡片模板",
+    "templates-title": "此看板提供的模板",
+    "templates-hint": "选择新卡片可基于的内容。至少需要一项。",
+    "change-note-icon": "更改图标"
   },
   "command_palette": {
     "tree-action-name": "树形：{{name}}",
