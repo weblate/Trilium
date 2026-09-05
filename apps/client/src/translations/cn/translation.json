@@ -1986,8 +1986,7 @@
     "llm-chat": "AI对话",
     "markdown": "Markdown",
     "note-types": "笔记类型",
-    "built-in-templates": "内置模板",
-    "selector-save": "保存"
+    "built-in-templates": "内置模板"
   },
   "protect_note": {
     "toggle-on": "保护笔记",
@@ -2552,11 +2551,8 @@
     "expand-all-columns": "展开所有列",
     "show-inbox-column": "显示收件箱列",
     "show-archived-notes": "显示已归档笔记",
-    "customize-templates": "自定义卡片模板",
     "more-templates": "更多模板…",
     "card-template": "选择卡片模板",
-    "templates-title": "此看板提供的模板",
-    "templates-hint": "选择新卡片可基于的内容。至少需要一项。",
     "change-note-icon": "更改图标"
   },
   "command_palette": {

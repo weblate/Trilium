@@ -746,11 +746,8 @@
     "expand-all-columns": "すべての列を展開",
     "show-inbox-column": "インボックス列を表示",
     "show-archived-notes": "アーカイブされたノートを表示",
-    "customize-templates": "カードテンプレートをカスタマイズ",
     "more-templates": "その他のテンプレート…",
     "card-template": "カードテンプレートを選択",
-    "templates-title": "このボードで利用可能なテンプレート",
-    "templates-hint": "新しいカードの作成元となるテンプレートを選択してください。少なくとも 1 つ必要です。",
     "change-note-icon": "アイコンを変更"
   },
   "code_buttons": {
@@ -836,8 +833,7 @@
     "llm-chat": "AI チャット",
     "markdown": "マークダウン",
     "note-types": "ノートタイプ",
-    "built-in-templates": "組み込みテンプレート",
-    "selector-save": "保存"
+    "built-in-templates": "組み込みテンプレート"
   },
   "edited_notes": {
     "no_edited_notes_found": "この日の編集されたノートはまだありません...",

@@ -2420,8 +2420,7 @@
     "collections": "컬렉션",
     "spreadsheet": "스프레드시트",
     "note-types": "노트 유형",
-    "built-in-templates": "기본 제공 템플릿",
-    "selector-save": "저장"
+    "built-in-templates": "기본 제공 템플릿"
   },
   "protect_note": {
     "toggle-on": "노트 보호",
@@ -3263,11 +3262,8 @@
     "expand-all-columns": "모든 열 펼치기",
     "show-inbox-column": "받은 편지함 열 표시",
     "show-archived-notes": "보관된 노트 표시",
-    "customize-templates": "카드 템플릿 사용자 지정",
     "more-templates": "더 많은 템플릿…",
     "card-template": "카드 템플릿 선택",
-    "templates-title": "이 보드에서 제공되는 템플릿",
-    "templates-hint": "새 카드를 만들 때 사용할 템플릿을 선택하세요. 최소 하나는 필요합니다.",
     "change-note-icon": "아이콘 변경"
   },
   "dashboard_view": {
