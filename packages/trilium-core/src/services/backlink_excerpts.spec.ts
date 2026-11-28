@@ -44,7 +44,9 @@ describe("findExcerpts", () => {
             `<p><a href="http://localhost:8080/#root/excParam/">absolute</a></p>` +
             `<p><a href="#root/excParam/xexcParam">longer ID</a></p>` +
             `<p><a href="#root/xexcParam">prefixed ID</a></p>` +
-            `<p><a href="https://example.com/excParam">other site</a></p>`;
+            `<p><a href="https://example.com/excParam">other site</a></p>` +
+            `<p><a>no address</a></p>` +
+            `<p><a href="">empty address</a></p>`;
 
         const excerpts = findExcerpts(html, "excParam");
 
@@ -55,6 +57,8 @@ describe("findExcerpts", () => {
         expect(excerpts[0]).toContain(`<a href="#root/excParam/xexcParam">longer ID</a>`);
         expect(excerpts[0]).toContain(`<a href="#root/xexcParam">prefixed ID</a>`);
         expect(excerpts[0]).toContain(`<a href="https://example.com/excParam">other site</a>`);
+        expect(excerpts[0]).toContain("<a>no address</a>");
+        expect(excerpts[0]).toContain(`<a href="">empty address</a>`);
     });
 });
 
