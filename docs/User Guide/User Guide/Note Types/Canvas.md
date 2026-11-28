@@ -1,7 +1,7 @@
 # Canvas
 <figure class="image"><img style="aspect-ratio:1152/720;" src="Canvas_demo.webp" width="1152" height="720"></figure>
 
-Canvas notes use the Excalidraw library to allow handwritten notes with mouse, pen or touch on an infinite canvas. It also supports basic diagramming, text and graphics input.
+Canvas notes are whiteboards for diagrams and sketches on an infinite canvas, built on the Excalidraw library. Shapes, arrows and text stay editable after they are drawn: an arrow attached to a shape follows it when the shape moves, and text can be placed inside a shape. Drawing by hand with a mouse, a pen or a finger is also possible.
 
 > [!TIP]
 > For notes that are mostly handwriting, consider a <a class="reference-link" href="Handwriting.md">Handwriting</a> note, which offers pages of ruled paper and stays responsive with large amounts of ink.
