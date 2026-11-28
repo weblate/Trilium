@@ -92,6 +92,18 @@ export async function launchDesktop(
     return app;
 }
 
+/** Sets up a knowledge base with the demo content and returns the main window. */
+export async function setUpWithDemoContent(app: ElectronApplication) {
+    const setup = await app.firstWindow();
+    await setup.getByRole("button", { name: "Continue" }).click();
+    await setup.getByText("New knowledge base").click();
+    const mainPromise = app.waitForEvent("window");
+    await setup.getByText("With demo content").click();
+    const page = await mainPromise;
+    await expect(page).toHaveTitle(/Trilium Notes$/);
+    return page;
+}
+
 /** Closes every app {@link launchDesktop} started, attaching its logs when the test failed. */
 export async function closeLaunchedDesktops(testInfo: TestInfo) {
     for (const { app, dataDir } of launched.splice(0)) {

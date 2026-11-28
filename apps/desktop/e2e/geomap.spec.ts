@@ -1,6 +1,6 @@
 import { expect, type Request, test } from "@playwright/test";
 
-import { closeLaunchedDesktops, launchDesktop } from "./support";
+import { closeLaunchedDesktops, launchDesktop, setUpWithDemoContent } from "./support";
 
 const PORT = 37880;
 const WORKER_URL = /\/maplibre-gl-worker-[^/]*\.js$/;
@@ -15,14 +15,7 @@ test.afterEach(async ({}, testInfo) => {
 test("geo map loads MapLibre's worker and draws the vector basemap", async () => {
     test.setTimeout(180_000);
 
-    const app = await launchDesktop("geomap", PORT);
-    const setup = await app.firstWindow();
-    await setup.getByRole("button", { name: "Continue" }).click();
-    await setup.getByText("New knowledge base").click();
-    const mainPromise = app.waitForEvent("window");
-    await setup.getByText("With demo content").click();
-    const page = await mainPromise;
-    await expect(page).toHaveTitle(/Trilium Notes$/);
+    const page = await setUpWithDemoContent(await launchDesktop("geomap", PORT));
 
     const workerRequest = new Promise<{ request: Request; failure: string | null }>((resolve) => {
         page.on("requestfinished", (request) => {
