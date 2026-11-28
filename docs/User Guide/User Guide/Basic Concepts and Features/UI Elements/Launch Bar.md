@@ -20,7 +20,7 @@ There are two ways to configure the launch bar:
 *   Right click in the empty space between launchers on the launch bar and select _Configure launch bar…_
 *   Click on the <a class="reference-link" href="Global%20menu.md">Global menu</a> and select _Configure launch bar_.
 
-This will open a new tab with the <a class="reference-link" href="Note%20Tree.md">Note Tree</a> listing the launchers.
+This opens a popup with a <a class="reference-link" href="Note%20Tree.md">Note Tree</a> listing the launchers on the left and the selected launcher on the right. To work in a tab instead, press the <span class="tn-icon bx bx-expand-alt"></span> _Switch to full editor_ button in the top-right corner of the popup (not available on mobile).
 
 ![](Launch%20Bar_image.jpg)
 

@@ -4,6 +4,8 @@ import { useCallback, useContext, useEffect, useRef, useState } from "preact/hoo
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
+import { t } from "../../services/i18n";
+import utils from "../../services/utils";
 import TitleRow from "../layout/TitleRow";
 import NoteTreeWidget from "../note_tree";
 import NoteDetail from "../NoteDetail";
@@ -87,6 +89,16 @@ export default function TreePopupEditor() {
                 // header, so skip the sidebar header that would otherwise duplicate it.
                 title={<TitleRow />}
                 hideSidebarHeader
+                customTitleBarButtons={!utils.isMobile() ? [{
+                    iconClassName: "bx-expand-alt",
+                    title: t("popup-editor.maximize"),
+                    onClick: async () => {
+                        const { notePath, hoistedNoteId, viewScope } = noteContext;
+                        if (!notePath) return;
+                        await appContext.tabManager.openContextWithNote(notePath, { hoistedNoteId, viewScope, activate: true });
+                        setShown(false);
+                    }
+                }] : undefined}
                 className="tree-popup-editor-dialog"
                 size="xl"
                 sidebar={<TreeSidebar noteContext={noteContext} />}
