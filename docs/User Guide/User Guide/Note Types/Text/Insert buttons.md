@@ -49,7 +49,7 @@ See the dedicated <a class="reference-link" href="Math%20Equations.md">Math Equ
 
 ## Drawing canvas
 
-Choose <span class="tn-icon bx bx-pen"></span> _Drawing canvas_ to draw on an Excalidraw canvas inside the text. See _Drawing canvases_ in <a class="reference-link" href="Include%20Note.md">Include Note</a>.
+Choose <span class="tn-icon bx bx-chalkboard"></span> _Drawing canvas_ to draw on an Excalidraw canvas inside the text. See _Drawing canvases_ in <a class="reference-link" href="Include%20Note.md">Include Note</a>.
 
 ## Mermaid diagram
 

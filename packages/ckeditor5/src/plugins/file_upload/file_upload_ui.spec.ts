@@ -11,8 +11,8 @@ import {
     Paragraph,
     SplitButtonView
 } from "ckeditor5";
+import bxChalkboard from "boxicons/svg/regular/bx-chalkboard.svg?raw";
 import bxLink from "boxicons/svg/regular/bx-link.svg?raw";
-import bxPen from "boxicons/svg/regular/bx-pen.svg?raw";
 import bxShapeSquare from "boxicons/svg/regular/bx-shape-square.svg?raw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -166,7 +166,7 @@ describe("FileUploadUI", () => {
             const focus = vi.spyOn(editor.editing.view, "focus");
 
             expect([ button.label, button.icon, button.tooltip ])
-                .toEqual([ "Drawing canvas", bxPen, true ]);
+                .toEqual([ "Drawing canvas", bxChalkboard, true ]);
 
             button.fire("execute");
 

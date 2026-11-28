@@ -26,6 +26,7 @@ import {
 } from "@ckeditor/ckeditor5-icons";
 import bxBookmark from "boxicons/svg/regular/bx-bookmark.svg?raw";
 import bxBulb from "boxicons/svg/regular/bx-bulb.svg?raw";
+import bxChalkboard from "boxicons/svg/regular/bx-chalkboard.svg?raw";
 import bxCommentError from "boxicons/svg/regular/bx-comment-error.svg?raw";
 import bxError from "boxicons/svg/regular/bx-error.svg?raw";
 import bxErrorCircle from "boxicons/svg/regular/bx-error-circle.svg?raw";
@@ -34,7 +35,6 @@ import bxHash from "boxicons/svg/regular/bx-hash.svg?raw";
 import bxInfoCircle from "boxicons/svg/regular/bx-info-circle.svg?raw";
 import bxMoviePlay from "boxicons/svg/regular/bx-movie-play.svg?raw";
 import bxNetworkChart from "boxicons/svg/regular/bx-network-chart.svg?raw";
-import bxPen from "boxicons/svg/regular/bx-pen.svg?raw";
 import bxSticker from "boxicons/svg/regular/bx-sticker.svg?raw";
 import bxSubdirectoryRight from "boxicons/svg/regular/bx-subdirectory-right.svg?raw";
 import {
@@ -431,7 +431,7 @@ export function buildTriliumSlashCommands(editor: Editor): SlashCommandDefinitio
             title: t("Drawing canvas"),
             description: t("Insert a canvas to draw on."),
             aliases: [ "excalidraw", "sketch", "whiteboard" ],
-            icon: bxPen,
+            icon: bxChalkboard,
             willInsert: true,
             commandName: "fileUpload",
             isEnabled: canEmbedFiles,

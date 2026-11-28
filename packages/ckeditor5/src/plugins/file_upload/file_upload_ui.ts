@@ -15,8 +15,8 @@ import {
     type FileInputViewDoneEvent,
     type Locale
 } from "ckeditor5";
+import bxChalkboard from "boxicons/svg/regular/bx-chalkboard.svg?raw";
 import bxLink from "boxicons/svg/regular/bx-link.svg?raw";
-import bxPen from "boxicons/svg/regular/bx-pen.svg?raw";
 import bxShapeSquare from "boxicons/svg/regular/bx-shape-square.svg?raw";
 
 import type { FileUploadOptions } from "./fileuploadcommand.js";
@@ -82,7 +82,7 @@ export default class FileUploadUI extends Plugin {
 
         editor.ui.componentFactory.add("drawingCanvas", (locale) => {
             const button = new ButtonView(locale);
-            button.set({ label: t("Drawing canvas"), icon: bxPen, tooltip: true });
+            button.set({ label: t("Drawing canvas"), icon: bxChalkboard, tooltip: true });
 
             const uploadCommand = editor.commands.get("fileUpload");
             const embedCommand = editor.commands.get("insertContentEmbed");
