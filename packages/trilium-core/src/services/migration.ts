@@ -130,6 +130,7 @@ function isDbUpToDate() {
 }
 
 async function migrateIfNecessary() {
+    rollBackWithdrawnHandwritingMigration();
     const currentDbVersion = getDbVersion();
 
     if (isNaN(currentDbVersion)) {
@@ -149,6 +150,18 @@ async function migrateIfNecessary() {
         }
         await migrate();
     }
+}
+
+/**
+ * Sets a database that development builds of the handwriting note type migrated to 243 back to
+ * 242, the version this build has. Migration 243 is withdrawn and its number is never reused, so
+ * only those databases are at 243. Once the app is at 244, such a database migrates on its own
+ * and this function can be removed.
+ */
+function rollBackWithdrawnHandwritingMigration() {
+    if (appInfo.dbVersion !== 242 || getDbVersion() !== 243) return;
+    getLog().info("Rolling the database back from version 243, a withdrawn migration, to 242.");
+    getSql().execute("UPDATE options SET value = '242' WHERE name = 'dbVersion'");
 }
 
 export default {

@@ -161,12 +161,22 @@ describe("Migration guards", () => {
         await migrateIfNecessary();
         expect(crash).toHaveBeenCalledTimes(1);
 
-        setDbVersion(String(appInfo.dbVersion + 1));
+        setDbVersion(String(appInfo.dbVersion + 2));
         await expect(migrateIfNecessary()).rejects.toBe(crashed);
 
         setDbVersion(String(OLDEST_SUPPORTED_DB_VERSION - 1));
         await expect(migrateIfNecessary()).rejects.toBe(crashed);
         expect(crash).toHaveBeenCalledTimes(3);
+    });
+
+    it("rolls back a database left at 243 by the withdrawn handwriting migration", async () => {
+        const crash = mockPlatform();
+        expect(appInfo.dbVersion).toBe(242);
+
+        setDbVersion("243");
+        await migrateIfNecessary();
+        expect(crash).not.toHaveBeenCalled();
+        expect(getSql().getValue("SELECT value FROM options WHERE name = 'dbVersion'")).toBe("242");
     });
 
     it("opens a newer database when told to ignore the version, and holds back when migration is manual", async () => {

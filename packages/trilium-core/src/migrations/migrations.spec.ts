@@ -9,6 +9,11 @@ describe("migrations", () => {
         expect(versions.length).toBe(uniqueVersions.size);
     });
 
+    it("never reuses the withdrawn version 243", () => {
+        expect(MIGRATIONS.map((m) => m.version), "development builds left databases at 243; number the next migration 244")
+            .not.toContain(243);
+    });
+
     it("should be sorted in descending order by version", () => {
         for (let i = 1; i < MIGRATIONS.length; i++) {
             expect(MIGRATIONS[i - 1].version, `migration at index ${i - 1} (v${MIGRATIONS[i - 1].version}) should be greater than migration at index ${i} (v${MIGRATIONS[i].version})`).toBeGreaterThan(MIGRATIONS[i].version);
