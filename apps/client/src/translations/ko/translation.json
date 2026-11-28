@@ -316,7 +316,8 @@
     "processing": "총 {{total}}개 중 {{progress}}개 노트 처리함",
     "throttled": "서비스가 요청 속도를 제한하고 있습니다. 접근이 재개될 때까지 가져오기를 대기합니다…",
     "throttled-with-total": "총 {{total}}개 중 {{progress}}개 노트를 가져왔습니다. 서비스가 요청 속도를 제한하고 있어 접근이 재개될 때까지 대기합니다…",
-    "successful": "가져오기가 성공적으로 완료되었습니다."
+    "successful": "가져오기가 성공적으로 완료되었습니다.",
+    "drawingImportedAsHandwriting": "RNote 그림을 파일 대신 손글씨 노트로 가져오기"
   },
   "file_upload": {
     "drop_or_browse_single": "여기로 파일을 드래그 앤 드롭하거나 찾아보기를 클릭하세요",
@@ -2517,7 +2518,8 @@
     "note-types": "노트 유형",
     "built-in-templates": "기본 제공 템플릿",
     "more": "더 보기",
-    "widget-preset-sample": "위젯에서 보내는 인사"
+    "widget-preset-sample": "위젯에서 보내는 인사",
+    "handwriting": "손글씨"
   },
   "protect_note": {
     "toggle-on": "노트 보호"
@@ -5432,5 +5434,62 @@
   },
   "scroll_rail": {
     "show_highlights": "강조 표시"
+  },
+  "handwriting": {
+    "pen": "펜",
+    "highlighter": "형광펜",
+    "eraser": "지우개",
+    "eraser_stroke": "획 전체 지우기",
+    "eraser_partial": "획 일부 지우기",
+    "finger_drawing": "손가락으로 그리기",
+    "pressure_sensitivity": "필압 감도",
+    "pressure_off": "끄기",
+    "pressure_low": "낮음",
+    "pressure_normal": "보통",
+    "pressure_high": "높음",
+    "pressure_maximum": "최대",
+    "pressure_custom": "사용자 지정",
+    "undo": "실행 취소",
+    "redo": "다시 실행",
+    "zoom_to_fit": "화면 크기에 맞추기",
+    "layout": "레이아웃",
+    "layout_pages": "페이지",
+    "layout_infinite": "무한 캔버스",
+    "paper": "용지",
+    "paper_ruled": "줄 있는 용지",
+    "paper_grid": "격자",
+    "paper_dots": "점",
+    "paper_blank": "빈 용지",
+    "thicker": "더 굵게",
+    "thinner": "더 가늘게",
+    "reset_thickness": "굵기 초기화",
+    "size_fine": "가는 선",
+    "size_medium": "중간 선",
+    "size_bold": "굵은 선",
+    "color_text": "텍스트 색상",
+    "color_red": "빨간색",
+    "color_blue": "파란색",
+    "color_green": "초록색",
+    "color_purple": "보라색",
+    "color_yellow": "노란색",
+    "color_pink": "분홍색",
+    "color_cyan": "청록색",
+    "color_orange": "주황색",
+    "color_custom": "사용자 지정 색상...",
+    "page_counter": "{{current}} / {{total}}",
+    "pan": "화면 이동",
+    "select": "선택",
+    "insert": "삽입",
+    "insert_image": "이미지...",
+    "delete_image": "이미지 삭제",
+    "insert_pdf": "PDF...",
+    "remove_pdf": "PDF 제거",
+    "pdf_number": "PDF {{number}}",
+    "pdf_failed": "PDF \"{{name}}\" 추가에 실패했습니다.",
+    "image_failed": "이미지 \"{{name}}\" 추가에 실패했습니다.",
+    "text": "텍스트",
+    "text_box_empty": "두 번 클릭하여 입력",
+    "delete_text_box": "텍스트 상자 제거",
+    "newer_version": "이 노트는 더 최신 버전의 Trilium에서 저장되었습니다. 편집하려면 이 기기의 Trilium을 업데이트하세요."
   }
 }
