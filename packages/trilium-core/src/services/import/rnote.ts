@@ -83,9 +83,11 @@ export function convertRnote(file: Uint8Array): RnoteConversion | undefined {
         return true;
     });
 
-    const config = asRecord(asRecord(snapshot.document)?.config);
+    // RNote saves the background either in `document.config` or in `document` itself.
+    const document = asRecord(snapshot.document);
+    const background = asRecord(asRecord(document?.config)?.background) ?? asRecord(document?.background);
     return {
-        paper: convertPaper(asRecord(config?.background)?.pattern),
+        paper: convertPaper(background?.pattern),
         strokes: inOrder(strokes),
         images: inOrder(images),
         texts: uniqueTexts.map((text, index) => ({ id: `rnote${index + 1}`, ...text })),
@@ -267,10 +269,10 @@ function buildStroke(
 
 /**
  * Returns a text box whose text starts where it does in the document, as one paragraph. Its line
- * breaks are kept, and its color and the colors of its ranges become spans that carry the color
- * both as `color` and as `--tn-color`, so it adapts to the theme. Black text takes the theme's
- * text color. The box keeps the font size, and one without a width is as wide as its longest line
- * at that size.
+ * breaks are kept, and so are its italic, bold, underlined and struck-through runs. Its color and
+ * the colors of its ranges become spans that carry the color both as `color` and as `--tn-color`,
+ * so it adapts to the theme. Black text takes the theme's text color. The box keeps the font size,
+ * and one without a width is as wide as its longest line at that size.
  */
 function convertText(stroke: JsonRecord): Omit<RnoteTextBox, "id"> | undefined {
     const { text } = stroke;
@@ -279,36 +281,54 @@ function convertText(stroke: JsonRecord): Omit<RnoteTextBox, "id"> | undefined {
         return undefined;
     }
     const style = asRecord(stroke.text_style);
-    const baseColor = toHex(style?.color);
+    const baseFormat: TextFormat = { color: toHex(style?.color), ...readFormat(style ?? {}) };
 
-    // The ranges count the bytes of the UTF-8 text.
-    const ranges: { start: number, end: number, color: string | undefined }[] = [];
+    // The ranges count the bytes of the UTF-8 text, and a later one overrides an earlier one.
+    const ranges: { start: number, end: number, format: Partial<TextFormat> }[] = [];
     const attributes = style?.ranged_text_attributes;
     for (const attribute of Array.isArray(attributes) ? attributes : []) {
         const range = asRecord(asRecord(attribute)?.range);
-        const textColor = asRecord(asRecord(attribute)?.attribute)?.text_color;
-        if (!range || !textColor || !isFiniteNumber(range.start) || !isFiniteNumber(range.end)) continue;
-        ranges.push({ start: range.start, end: range.end, color: toHex(textColor) });
+        const values = asRecord(asRecord(attribute)?.attribute);
+        if (!range || !values || !isFiniteNumber(range.start) || !isFiniteNumber(range.end)) continue;
+        const format: Partial<TextFormat> = readFormat(values);
+        if ("text_color" in values) format.color = toHex(values.text_color);
+        ranges.push({ start: range.start, end: range.end, format });
     }
 
-    const runs: { color: string | undefined, text: string }[] = [];
+    const runs: { format: TextFormat, key: string, text: string }[] = [];
     let byte = 0;
     for (const character of text) {
-        const range = ranges.findLast(({ start, end }) => byte >= start && byte < end);
-        const color = range ? range.color : baseColor;
+        let format = baseFormat;
+        for (const range of ranges) {
+            if (byte >= range.start && byte < range.end) format = { ...format, ...range.format };
+        }
+        const key = JSON.stringify([ format.color, format.bold, format.italic, format.underline, format.strikethrough ]);
         const last = runs.at(-1);
-        if (last && last.color === color) {
+        if (last && last.key === key) {
             last.text += character;
         } else {
-            runs.push({ color, text: character });
+            runs.push({ format, key, text: character });
         }
         byte += encodeUtf8(character).length;
     }
 
-    const html = runs.map(({ color, text }) => {
-        const escaped = text.split(/\r\n|\r|\n/).map(escapeHtml).join("<br>");
-        return color ? `<span style="color:${color};--tn-color:${color};">${escaped}</span>` : escaped;
-    }).join("");
+    // Runs of one color share a span, so the formatting of its parts nests inside it.
+    const colorRuns: { color: string | undefined, html: string }[] = [];
+    for (const { format, text } of runs) {
+        let html = text.split(/\r\n|\r|\n/).map(escapeHtml).join("<br>");
+        for (const [ property, tag ] of FORMAT_TAGS) {
+            if (format[property]) html = `<${tag}>${html}</${tag}>`;
+        }
+        const last = colorRuns.at(-1);
+        if (last && last.color === format.color) {
+            last.html += html;
+        } else {
+            colorRuns.push({ color: format.color, html });
+        }
+    }
+    const html = colorRuns.map(({ color, html }) => (
+        color ? `<span style="color:${color};--tn-color:${color};">${html}</span>` : html
+    )).join("");
 
     // RNote can stretch a box more one way than the other, which a text box cannot. The font size
     // follows the smaller stretch, so the text takes no more lines and no taller ones than in RNote.
@@ -328,6 +348,35 @@ function convertText(stroke: JsonRecord): Omit<RnoteTextBox, "id"> | undefined {
         s: fontSize * Math.min(scaleX, scaleY),
         html: `<p>${html}</p>`
     };
+}
+
+/** The formatting of a run of text that a text box keeps. */
+interface TextFormat {
+    color?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    strikethrough?: boolean;
+}
+
+/** The element of each format, from the innermost to the outermost. */
+const FORMAT_TAGS = [
+    [ "italic", "i" ], [ "strikethrough", "s" ], [ "underline", "u" ], [ "bold", "strong" ]
+] as const;
+/** The lightest font weight that is bold, as in CSS. RNote's regular weight is 500. */
+const BOLD_WEIGHT = 600;
+
+/**
+ * Returns the formats that a text style or a ranged attribute sets, leaving out those it does not
+ * mention, so a range overrides only what it sets.
+ */
+function readFormat(values: JsonRecord): Omit<TextFormat, "color"> {
+    const format: Omit<TextFormat, "color"> = {};
+    if (isFiniteNumber(values.font_weight)) format.bold = values.font_weight >= BOLD_WEIGHT;
+    if (typeof values.font_style === "string") format.italic = values.font_style === "italic";
+    if (typeof values.underline === "boolean") format.underline = values.underline;
+    if (typeof values.strikethrough === "boolean") format.strikethrough = values.strikethrough;
+    return format;
 }
 
 /**

@@ -75,6 +75,11 @@ describe("convertRnote", () => {
         )).document.paper;
         expect([ "none", "lines", "dots", "isometric_grid", undefined ].map(paper))
             .toEqual([ "blank", "ruled", "dots", "grid", "blank" ]);
+        // RNote also saves the background next to the layout, outside a `config`.
+        const unwrapped = (pattern: string) => convert(rnote(
+            [ brush([ [ 0, 0, 1 ] ]) ], undefined, { document: { background: { pattern }, layout: "continuous_vertical" } }
+        )).document.paper;
+        expect([ "lines", "grid", "dots" ].map(unwrapped)).toEqual([ "ruled", "grid", "dots" ]);
     });
 
     it("gives a stroke the width RNote drew it at", () => {
@@ -254,6 +259,32 @@ describe("convertRnote", () => {
         expect(screenshot.images).toHaveLength(1);
     });
 
+    it("keeps the italic, bold, underlined and struck-through text of a text box", () => {
+        const text = (content: string, style: object) => convert(rnote([ { textstroke: {
+            text: content, transform: { affine: [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ] }, text_style: style
+        } } ])).document.texts[0].html;
+        const ranged = (...ranges: [ number, number, object ][]) => ({
+            ranged_text_attributes: ranges.map(([ start, end, attribute ]) => ({ range: { start, end }, attribute }))
+        });
+
+        // RNote saves a range that runs past the end of the text.
+        expect(text("a quick fox", ranged([ 0, 47, { font_style: "italic" } ]))).toBe("<p><i>a quick fox</i></p>");
+        expect(text("Rnote!", { font_style: "italic", font_weight: 700 })).toBe("<p><strong><i>Rnote!</i></strong></p>");
+        // RNote's regular weight is 500, which is not bold.
+        expect(text("plain", { font_style: "regular", font_weight: 500 })).toBe("<p>plain</p>");
+        expect(text("one two three four", ranged(
+            [ 0, 3, { font_weight: 700 } ],
+            [ 4, 7, { underline: true } ],
+            [ 8, 13, { strikethrough: true } ],
+            [ 8, 18, { text_color: { r: 1, g: 0, b: 0, a: 1 } } ],
+            // A later range overrides an earlier one.
+            [ 0, 18, { font_style: "italic" } ],
+            [ 14, 18, { font_style: "regular" } ]
+        ))).toBe("<p><strong><i>one</i></strong><i> </i><u><i>two</i></u><i> </i>"
+            + "<span style=\"color:#ff0000;--tn-color:#ff0000;\"><s><i>three</i></s><i> </i>four</span></p>");
+        expect(text("a\nb", { font_style: "italic" })).toBe("<p><i>a<br>b</i></p>");
+    });
+
     it("draws what a component leaves out as RNote does, and skips one it cannot draw", () => {
         const path = (start: object, ...ends: object[]) => ({ start, segments: ends.map((end) => ({ lineto: { end } })) });
         // One transparent pixel.
@@ -267,10 +298,10 @@ describe("convertRnote", () => {
             } },
             // A line in a style without a width or a color.
             { shapestroke: { shape: { line: { start: [ 0, 0 ], end: [ 0, 10 ] } }, style: { smooth: {} } } },
-            // A range that sets no color.
+            // A range that sets nothing a text box holds.
             { textstroke: {
-                text: "Bold", transform: { affine: [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ] },
-                text_style: { ranged_text_attributes: [ { range: { start: 0, end: 4 }, attribute: { font_weight: 700 } } ] }
+                text: "Serif", transform: { affine: [ 1, 0, 0, 0, 1, 0, 0, 0, 1 ] },
+                text_style: { ranged_text_attributes: [ { range: { start: 0, end: 5 }, attribute: { font_family: "serif" } } ] }
             } },
             // Without a style, without a point, without a style, and with an end that is not a number.
             { brushstroke: { path: path({ pos: [ 0, 0 ] }) } },
@@ -288,7 +319,7 @@ describe("convertRnote", () => {
             { w: 2, k: 0, p: [ 0, 0, 128, 100, 0, 0 ] },
             { w: 2, k: 0, p: [ 0, 0, 128, 0, 50, 0, 0, 50, 0 ] }
         ]);
-        expect(document.texts.map(({ html }: { html: string }) => html)).toEqual([ "<p>Bold</p>" ]);
+        expect(document.texts.map(({ html }: { html: string }) => html)).toEqual([ "<p>Serif</p>" ]);
     });
 
     it("returns nothing for a file that is not an RNote document or holds nothing it can convert", () => {

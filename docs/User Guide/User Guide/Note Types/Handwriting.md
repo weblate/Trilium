@@ -169,7 +169,7 @@ To keep an RNote document as it is, as a <a class="reference-link" href="File.md
 *   Lines and rectangles drawn with the shape tool become ordinary ink.
 *   The note uses the infinite canvas, with the paper nearest to the background pattern of the document, and opens at the top of its ink, fitting its width.
 *   Images keep their position and size, and are saved as attachments of the note. A rotated image is imported upright.
-*   Typed text becomes text boxes at the same place, keeping its size, line breaks and colors. The text takes the font of the note, so its lines can break at other words than in RNote.
+*   Typed text becomes text boxes at the same place, keeping its size, line breaks and colors, and its italic, bold, underlined and struck-through parts. The text takes the font of the note, so its lines can break at other words than in RNote.
 *   The other shapes, such as ellipses, and vector images are left out. A document with nothing that can be imported becomes a <a class="reference-link" href="File.md">File</a> note.
 
 ## Limitations
