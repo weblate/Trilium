@@ -30,7 +30,7 @@ export function findExcerpts(html: string, referencedNoteId: string): string[] {
 
     removeImages(document);
 
-    const linkEls = document.querySelectorAll("a").filter((el) => el.getAttribute("href")?.endsWith(referencedNoteId));
+    const linkEls = document.querySelectorAll("a").filter((el) => linksToNote(el.getAttribute("href"), referencedNoteId));
     for (const linkEl of linkEls) {
         linkEl.classList.add("backlink-link");
     }
@@ -111,6 +111,26 @@ export function findExcerpts(html: string, referencedNoteId: string): string[] {
         excerpts.push(`<div class="ck-content backlink-excerpt">${excerptEls.map(String).join("")}</div>`);
     }
     return excerpts;
+}
+
+/**
+ * Whether `href` links to the note `referencedNoteId`: its ID is the last path segment after
+ * `#root/`, ahead of any parameters, as in `#root/<noteId>?block=<blockId>`.
+ */
+function linksToNote(href: string | null | undefined, referencedNoteId: string) {
+    if (!href) {
+        return false;
+    }
+
+    const rootIndex = href.lastIndexOf("#root/");
+    if (rootIndex === -1) {
+        return false;
+    }
+
+    // The path can name the parent notes ahead of the target, as in `#root/<parentId>/<noteId>`.
+    const path = href.slice(rootIndex + "#root/".length).split(/[?#]/)[0];
+    const lastSlash = path.lastIndexOf("/");
+    return path.slice(lastSlash + 1) === referencedNoteId;
 }
 
 function isInside(node: ElementOrText, ancestors: Set<ElementOrText>) {
