@@ -48,6 +48,22 @@ describe("setupAppView", () => {
         expect(document.documentElement.classList.contains("app-view-shown")).toBe(true);
     });
 
+    it("gives the app's stylesheets the page's theme as it switches", async () => {
+        const root = document.documentElement;
+        const body = document.body;
+        root.classList.add("theme-dark");
+        renderPage({ locale: "en" });
+
+        await setupAppView(".share-note-view", async () => ({ default: vi.fn() }));
+        expect(body.classList.contains("dark-theme")).toBe(true);
+        expect(body.classList.contains("light-theme")).toBe(false);
+
+        root.classList.replace("theme-dark", "theme-light");
+        await Promise.resolve();
+        expect(body.classList.contains("dark-theme")).toBe(false);
+        expect(body.classList.contains("light-theme")).toBe(true);
+    });
+
     it("shows the content when the view fails to mount, in the default locale", async () => {
         vi.stubGlobal("glob", undefined);
         renderPage({ locale: null });
