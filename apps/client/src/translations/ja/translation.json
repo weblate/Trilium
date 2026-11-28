@@ -507,7 +507,8 @@
     "extracting": "{{total}} 件中 {{progress}} 件のアイテムを抽出しました",
     "processing": "{{total}} 件中 {{progress}} 件のノートを処理しました",
     "throttled": "サービス側でリクエストのレート制限がかかっており、インポート処理はアクセスが再開されるのを待機中です…",
-    "throttled-with-total": "{{total}} 件中 {{progress}} 件のノートをインポートしました — サービスによるリクエスト制限がかかっているため、アクセスが再開されるのを待機中です…"
+    "throttled-with-total": "{{total}} 件中 {{progress}} 件のノートをインポートしました — サービスによるリクエスト制限がかかっているため、アクセスが再開されるのを待機中です…",
+    "drawingImportedAsHandwriting": "RNote の描画をファイルではなく、手書きノートとしてインポート"
   },
   "password_not_set": {
     "title": "パスワードが設定されていない",
@@ -902,7 +903,8 @@
     "note-types": "ノートタイプ",
     "built-in-templates": "組み込みテンプレート",
     "more": "その他",
-    "widget-preset-sample": "ウィジェットからのメッセージ"
+    "widget-preset-sample": "ウィジェットからのメッセージ",
+    "handwriting": "手書き"
   },
   "edited_notes": {
     "no_edited_notes_found": "この日の編集されたノートはまだありません..."
@@ -5316,7 +5318,7 @@
     "thin_stroke_description": "手書きに適した、より細い線を描きます。すでに描かれた線の幅はそのまま維持されます。",
     "no_tool": "ツールなし",
     "zoom": "ズーム",
-    "zoom_to_fit": "全体を表示"
+    "zoom_to_fit": "画面に合わせる"
   },
   "sort_selection": {
     "sort_blocks": "ブロックを並べ替え",
@@ -5432,5 +5434,62 @@
   },
   "scroll_rail": {
     "show_highlights": "ハイライト"
+  },
+  "handwriting": {
+    "pen": "ペン",
+    "highlighter": "蛍光ペン",
+    "eraser": "消しゴム",
+    "eraser_stroke": "ストローク全体を消去",
+    "eraser_partial": "ストロークの一部を消去",
+    "finger_drawing": "指での描画",
+    "pressure_sensitivity": "筆圧感知",
+    "pressure_off": "オフ",
+    "pressure_low": "低",
+    "pressure_normal": "標準",
+    "pressure_high": "高",
+    "pressure_maximum": "最大",
+    "pressure_custom": "カスタム",
+    "undo": "元に戻す",
+    "redo": "やり直し",
+    "zoom_to_fit": "画面に合わせる",
+    "layout": "レイアウト",
+    "layout_pages": "ページ",
+    "layout_infinite": "無限キャンバス",
+    "paper": "用紙",
+    "paper_ruled": "罫線",
+    "paper_grid": "方眼",
+    "paper_dots": "ドット",
+    "paper_blank": "無地",
+    "thicker": "太くする",
+    "thinner": "細くする",
+    "reset_thickness": "太さをリセット",
+    "size_fine": "細字",
+    "size_medium": "中字",
+    "size_bold": "太字",
+    "color_text": "文字色",
+    "color_red": "赤",
+    "color_blue": "青",
+    "color_green": "緑",
+    "color_purple": "紫",
+    "color_yellow": "黄",
+    "color_pink": "ピンク",
+    "color_cyan": "シアン",
+    "color_orange": "オレンジ",
+    "color_custom": "カスタムカラー...",
+    "page_counter": "{{current}} / {{total}}",
+    "pan": "パン",
+    "select": "選択",
+    "insert": "挿入",
+    "insert_image": "画像...",
+    "delete_image": "画像を削除",
+    "insert_pdf": "PDF...",
+    "remove_pdf": "PDFを削除",
+    "pdf_number": "PDF {{number}}",
+    "pdf_failed": "PDF \"{{name}}\" を追加できませんでした。",
+    "image_failed": "画像 \"{{name}}\" を追加できませんでした。",
+    "text": "テキスト",
+    "text_box_empty": "ダブルクリックして入力",
+    "delete_text_box": "テキストボックスを削除",
+    "newer_version": "このノートは新しいバージョンの Trilium で保存されています。編集するには、このデバイスの Trilium を更新してください。"
   }
 }
