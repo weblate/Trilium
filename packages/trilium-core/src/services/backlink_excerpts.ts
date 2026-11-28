@@ -3,7 +3,7 @@
  * referenced note, as `ck-content backlink-excerpt` fragments the backlinks UI renders.
  *
  * {@link findExcerpts} works on any HTML that marks its note links as `href="…#root…/<noteId>"`
- * anchors — a text note's content directly. {@link findLlmChatExcerpts} brings `llmChat` notes
+ * anchors, parameters such as `?block=<blockId>` aside — a text note's content directly. {@link findLlmChatExcerpts} brings `llmChat` notes
  * to that same shape first: their assistant prose is markdown, rendered to HTML through the
  * shared pipeline the chat UI uses, with wiki-link anchors retitled from note ID to note title.
  * {@link findMindMapExcerpts} has no prose to quote at all, a map's links belonging to its nodes,
@@ -114,23 +114,18 @@ export function findExcerpts(html: string, referencedNoteId: string): string[] {
 }
 
 /**
- * Whether `href` links to the note `referencedNoteId`: its ID is the last path segment after
- * `#root/`, ahead of any parameters, as in `#root/<noteId>?block=<blockId>`.
+ * Whether `href` links to the note `referencedNoteId`, read as `findInternalLinks()` in
+ * services/notes.ts reads it: the note ID is the last segment of the path after `#root/`, ahead
+ * of an optional trailing slash and any parameters (`#root/<parentId>/<noteId>?block=<blockId>`).
  */
-function linksToNote(href: string | null | undefined, referencedNoteId: string) {
-    if (!href) {
+function linksToNote(href: string | undefined, referencedNoteId: string) {
+    const rootIndex = href?.lastIndexOf("#root/") ?? -1;
+    if (!href || rootIndex === -1) {
         return false;
     }
 
-    const rootIndex = href.lastIndexOf("#root/");
-    if (rootIndex === -1) {
-        return false;
-    }
-
-    // The path can name the parent notes ahead of the target, as in `#root/<parentId>/<noteId>`.
-    const path = href.slice(rootIndex + "#root/".length).split(/[?#]/)[0];
-    const lastSlash = path.lastIndexOf("/");
-    return path.slice(lastSlash + 1) === referencedNoteId;
+    const [ path ] = href.slice(rootIndex + "#root/".length).split(/[?#]/);
+    return path.split("/").filter(Boolean).at(-1) === referencedNoteId;
 }
 
 function isInside(node: ElementOrText, ancestors: Set<ElementOrText>) {
