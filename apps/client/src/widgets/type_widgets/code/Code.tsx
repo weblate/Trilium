@@ -140,8 +140,8 @@ export function formatViewSource(note: FNote, content: string) {
 
 /**
  * Formats the JSON of a handwriting note with one object per line, as the general indentation
- * gives each coordinate of a stroke a line of its own. A note saved before `objects` lists its
- * `strokes`. Content that is not such a document stays as it is.
+ * gives each coordinate of a stroke a line of its own. Content that is not such a document stays
+ * as it is.
  */
 function formatHandwritingSource(content: string) {
     let doc: unknown;
@@ -151,17 +151,16 @@ function formatHandwritingSource(content: string) {
         return content;
     }
     const saved = (doc ?? {}) as Record<string, unknown>;
-    const listed = Array.isArray(saved.objects) ? "objects" : "strokes";
-    const objects = saved[listed];
+    const { objects } = saved;
     if (!doc || typeof doc !== "object" || !Array.isArray(objects)) {
         return content;
     }
 
     const lines = Object.entries(saved)
-        .filter(([ key ]) => key !== listed)
+        .filter(([ key ]) => key !== "objects")
         .map(([ key, value ]) => `    ${JSON.stringify(key)}: ${JSON.stringify(value)},`);
     const objectLines = objects.map((object) => `        ${JSON.stringify(object)}`);
-    return [ "{", ...lines, `    ${JSON.stringify(listed)}: [`, objectLines.join(",\n"), "    ]", "}" ]
+    return [ "{", ...lines, `    "objects": [`, objectLines.join(",\n"), "    ]", "}" ]
         .filter((line) => line !== "")
         .join("\n");
 }

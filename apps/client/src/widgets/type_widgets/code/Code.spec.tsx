@@ -186,16 +186,16 @@ describe("note source", () => {
     it("shows a handwriting note with one stroke per line", () => {
         const note = buildNote({ type: "code", mime: "application/vnd.triliumnotes.handwriting+json", title: "H", content: "" });
         const content = JSON.stringify({
-            version: 1, paper: "grid", strokes: [ { w: 3, p: [ 1, 2, 128, 3, 4, 0 ] }, { c: "#e64d4d", w: 3, p: [ 5, 6, 7 ] } ]
+            version: 2, paper: "grid", objects: [ { id: "a", w: 3, p: [ 1, 2, 128, 3, 4, 0 ] }, { o: "text", id: "b", html: "" } ]
         });
         const source = formatViewSource(note, content);
         expect(source).toBe([
             "{",
-            "    \"version\": 1,",
+            "    \"version\": 2,",
             "    \"paper\": \"grid\",",
-            "    \"strokes\": [",
-            "        {\"w\":3,\"p\":[1,2,128,3,4,0]},",
-            "        {\"c\":\"#e64d4d\",\"w\":3,\"p\":[5,6,7]}",
+            "    \"objects\": [",
+            "        {\"id\":\"a\",\"w\":3,\"p\":[1,2,128,3,4,0]},",
+            "        {\"o\":\"text\",\"id\":\"b\",\"html\":\"\"}",
             "    ]",
             "}"
         ].join("\n"));
@@ -206,18 +206,6 @@ describe("note source", () => {
         const script = buildNote({ type: "code", mime: "application/javascript;env=frontend", title: "S", content: "" });
         expect(getReadOnlyMime(script, script.mime)).toBe("application/javascript;env=frontend");
         expect(getReadOnlyMime(script, undefined)).toBe("text/plain");
-
-        // A note saved since lists its objects, of which the strokes are most.
-        const objects = JSON.stringify({ version: 2, objects: [ { id: "a", w: 3, p: [ 5, 6, 7 ] }, { o: "text", id: "b", html: "" } ] });
-        expect(formatViewSource(note, objects)).toBe([
-            "{",
-            "    \"version\": 2,",
-            "    \"objects\": [",
-            "        {\"id\":\"a\",\"w\":3,\"p\":[5,6,7]},",
-            "        {\"o\":\"text\",\"id\":\"b\",\"html\":\"\"}",
-            "    ]",
-            "}"
-        ].join("\n"));
     });
 });
 

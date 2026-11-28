@@ -267,10 +267,10 @@ describe("processNoteContent", () => {
             }]
         };
         const sheet = {
-            version: 1, paper: "ruled", layout: "pages",
-            pdf: "api/attachments/sheetPdf1/open",
-            images: [{ url: "api/attachments/sheetPicture1/image/exercise.png", x: 0, y: 0, w: 240, h: 180 }],
-            strokes: []
+            version: 2, paper: "ruled", layout: "pages",
+            pdfs: [ "api/attachments/sheetPdf1/open" ],
+            sheets: [ [ 1280, 720, 0, 0 ] ],
+            objects: [{ o: "image", id: "i1", url: "api/attachments/sheetPicture1/image/exercise.png", x: 0, y: 0, w: 240, h: 180 }]
         };
 
         const zipBuffer = await createZipBuffer({
@@ -289,7 +289,7 @@ describe("processNoteContent", () => {
         expect(content).not.toContain("sheetPicture1");
         const [ pdf ] = importedNote.getAttachmentsByRole("file");
         expect(pdf.attachmentId).not.toBe("sheetPdf1");
-        expect(JSON.parse(content).pdf).toBe(`api/attachments/${pdf.attachmentId}/open`);
+        expect(JSON.parse(content).pdfs).toEqual([ `api/attachments/${pdf.attachmentId}/open` ]);
     });
 
     it("points the links of an imported handwriting note's text boxes at the notes as they were recreated", async () => {
@@ -324,31 +324,27 @@ describe("processNoteContent", () => {
         const html = `<p><a class="reference-link" href="#root/inkLinks1/inkTarget1">Reading</a>`
             + `<a href="#root/inkTarget1?viewMode=attachments&amp;attachmentId=inkTargetFile1">report</a>`
             + `<a class="reference-link" href="#root/outsideNote1">Elsewhere</a></p>`;
-        const sheet = (version: number) => (version === 1
-            ? { version, paper: "blank", layout: "infinite", strokes: [], texts: [ { id: "t", x: 0, y: 0, w: 100, html } ] }
-            : { version, paper: "blank", layout: "infinite", objects: [ { id: "s1", w: 3, p: [ 0, 0, 128 ] }, { o: "text", id: "t", x: 0, y: 0, w: 100, html } ] });
+        const sheet = { version: 2, paper: "blank", layout: "infinite", objects: [ { id: "s1", w: 3, p: [ 0, 0, 128 ] }, { o: "text", id: "t", x: 0, y: 0, w: 100, html } ] };
 
-        for (const version of [ 2, 1 ]) {
-            const zipBuffer = await createZipBuffer({
-                "!!!meta.json": JSON.stringify(metaFile),
-                "Lecture.json": JSON.stringify(sheet(version)),
-                "Lecture/Reading.html": "<p>Read me</p>",
-                "Lecture/Reading_report.pdf": Buffer.from("%PDF-1.4")
-            });
+        const zipBuffer = await createZipBuffer({
+            "!!!meta.json": JSON.stringify(metaFile),
+            "Lecture.json": JSON.stringify(sheet),
+            "Lecture/Reading.html": "<p>Read me</p>",
+            "Lecture/Reading_report.pdf": Buffer.from("%PDF-1.4")
+        });
 
-            const { importedNote } = await testImportBuffer(zipBuffer, `import-ink-links-${version}`);
-            const [ target ] = importedNote.getChildNotes();
-            const [ file ] = target.getAttachments();
-            const saved = JSON.parse(importedNote.getContent() as string);
-            const [ box ] = version === 1 ? saved.texts : saved.objects.filter(({ o }: { o?: string }) => o === "text");
+        const { importedNote } = await testImportBuffer(zipBuffer, "import-ink-links");
+        const [ target ] = importedNote.getChildNotes();
+        const [ file ] = target.getAttachments();
+        const saved = JSON.parse(importedNote.getContent() as string);
+        const [ box ] = saved.objects.filter(({ o }: { o?: string }) => o === "text");
 
-            expect(target.noteId).not.toBe("inkTarget1");
-            expect(box.html).toBe(`<p><a class="reference-link" href="#root/${importedNote.noteId}/${target.noteId}">Reading</a>`
-                + `<a href="#root/${target.noteId}?viewMode=attachments&amp;attachmentId=${file.attachmentId}">report</a>`
-                + `<a class="reference-link" href="#root/outsideNote1">Elsewhere</a></p>`);
-            // The note is related to the note its text box now links to.
-            expect(importedNote.getRelations("internalLink").map(({ value }) => value)).toContain(target.noteId);
-        }
+        expect(target.noteId).not.toBe("inkTarget1");
+        expect(box.html).toBe(`<p><a class="reference-link" href="#root/${importedNote.noteId}/${target.noteId}">Reading</a>`
+            + `<a href="#root/${target.noteId}?viewMode=attachments&amp;attachmentId=${file.attachmentId}">report</a>`
+            + `<a class="reference-link" href="#root/outsideNote1">Elsewhere</a></p>`);
+        // The note is related to the note its text box now links to.
+        expect(importedNote.getRelations("internalLink").map(({ value }) => value)).toContain(target.noteId);
     });
 
     it("points an imported embed at its attachment as it was recreated", async () => {

@@ -97,7 +97,7 @@ describe("Note type mappings", () => {
     });
 
     it("exports a handwriting note as its JSON content with a .json extension", () => {
-        const content = JSON.stringify({ version: 1, paper: "ruled", strokes: [] });
+        const content = JSON.stringify({ version: 2, paper: "ruled", objects: [] });
         const note = buildNote({ type: "code", mime: HANDWRITING_MIME, title: "Sheet" });
         expect(mapByNoteType(note, content, "html")).toMatchObject({
             payload: content,

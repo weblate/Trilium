@@ -699,14 +699,14 @@ describe("notes service (real DB)", () => {
 
             getContext().init(() => saveLinks(ink.note, sheet("<p>no link</p>")));
             expect(links()).toEqual([]);
-            // A note saved before `objects` lists its text boxes apart.
-            const older = JSON.stringify({ version: 1, texts: [ { id: "a", x: 0, y: 0, w: 100, html } ], strokes: [] });
-            getContext().init(() => saveLinks(ink.note, older));
-            expect(links()).toEqual([ target.note.noteId ]);
-            // Content that is not a document, and text boxes without HTML, relate the note to nothing.
-            const unlinked = [ "{", "null", JSON.stringify({ objects: [ { o: "text", id: "a" } ] }), JSON.stringify({ texts: [ null ] }) ];
+            // Content that is not a document, text boxes without HTML and HTML outside a text box
+            // relate the note to nothing.
+            const unlinked = [
+                "{", "null", JSON.stringify({ objects: [ { o: "text", id: "a" }, null ] }),
+                JSON.stringify({ objects: [ { o: "image", id: "a", html } ] })
+            ];
             for (const content of unlinked) {
-                getContext().init(() => saveLinks(ink.note, older));
+                getContext().init(() => saveLinks(ink.note, sheet(html)));
                 expect(links()).toEqual([ target.note.noteId ]);
                 getContext().init(() => saveLinks(ink.note, content));
                 expect(links()).toEqual([]);
@@ -715,12 +715,15 @@ describe("notes service (real DB)", () => {
     });
 
     describe("handwriting images", () => {
-        const sheet = (...urls: string[]) => JSON.stringify({
-            version: 1, paper: "ruled", layout: "pages",
-            pdf: urls.find((url) => url.endsWith("/open")),
-            images: urls.filter((url) => !url.endsWith("/open")).map((url) => ({ url, x: 0, y: 0, w: 100, h: 50 })),
-            strokes: []
-        });
+        const sheet = (...urls: string[]) => {
+            const pdfs = urls.filter((url) => url.endsWith("/open"));
+            return JSON.stringify({
+                version: 2, paper: "ruled", layout: "pages",
+                ...(pdfs.length && { pdfs, sheets: pdfs.map((_pdf, index) => [ 1280, 720, index, 0 ]) }),
+                objects: urls.filter((url) => !url.endsWith("/open"))
+                    .map((url, index) => ({ o: "image", id: `i${index}`, url, x: 0, y: 0, w: 100, h: 50 }))
+            });
+        };
         const PDF = { role: "file", mime: "application/pdf", title: "slides.pdf", content: new Uint8Array([ 4, 5 ]) };
         const pdfUrlOf = (attachmentId: string | undefined) => `api/attachments/${attachmentId}/open`;
         const urlOf = (attachmentId: string | undefined) => `api/attachments/${attachmentId}/image/a.png`;

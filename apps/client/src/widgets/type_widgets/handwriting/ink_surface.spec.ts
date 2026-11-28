@@ -945,7 +945,7 @@ describe("ink surface input", () => {
         expect(parseInkDocument(surface.serialize()).strokes).toHaveLength(1);
     });
 
-    it("adds a PDF after the ink of a note, and gives sheets to a note saved with a PDF and none", async () => {
+    it("adds a PDF after the ink of a note, and not to a note loaded while it opens", async () => {
         const PDF = "api/attachments/abc/open";
         const picture = document.createElement("canvas");
         const slide = { width: 1280, height: 720 };
@@ -967,17 +967,12 @@ describe("ink surface input", () => {
 
         // A PDF that opens after another note was loaded is not added to that note.
         const adding = surface.addPdf("api/attachments/def/open");
-        surface.load({ version: 2, paper: "blank", layout: "pages", strokes: [], legacyPdf: PDF });
-        // Until the PDF is open, the note names it as it was saved.
-        expect(onStateChange).toHaveBeenLastCalledWith(expect.objectContaining({ pdfs: [ PDF ] }));
-        expect(JSON.parse(surface.serialize())).toMatchObject({ pdf: PDF });
-        expect(JSON.parse(surface.serialize())).not.toHaveProperty("sheets");
+        surface.load({ version: 2, paper: "blank", layout: "pages", strokes: [] });
         onChange.mockClear();
         expect(await adding).toBe(false);
-        await new Promise((resolve) => setTimeout(resolve));
-        expect(JSON.parse(surface.serialize())).toMatchObject({ pdfs: [ PDF ], sheets: [ [ 1280, 720, 0, 0 ], [ 1280, 720, 0, 1 ] ] });
-        expect(JSON.parse(surface.serialize())).not.toHaveProperty("pdf");
-        expect(onChange).toHaveBeenCalledOnce();
+        expect(JSON.parse(surface.serialize())).not.toHaveProperty("sheets");
+        expect(JSON.parse(surface.serialize())).not.toHaveProperty("pdfs");
+        expect(onChange).not.toHaveBeenCalled();
 
         // A PDF whose first page would lie past the last sheet a note can hold adds nothing.
         const far = { ...pages, destroy: vi.fn() };

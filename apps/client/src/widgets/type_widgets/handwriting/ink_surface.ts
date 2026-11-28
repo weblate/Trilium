@@ -137,8 +137,6 @@ export default class InkSurface {
     private paper: PaperStyle = "ruled";
     private layout: InkLayout = "pages";
     private pages = new PageLayout();
-    /** The PDF of a note saved before sheets had sizes, until the note has sheets for its pages. */
-    private legacyPdf: string | undefined;
     /** Counts the documents loaded, to tell when a PDF opens for a note no longer shown. */
     private generation = 0;
     private pageCount = 1;
@@ -323,9 +321,7 @@ export default class InkSurface {
         }
         this.generation++;
         this.pages = new PageLayout(doc.sheets);
-        this.legacyPdf = doc.legacyPdf;
         this.pdf.retain(this.getPdfs());
-        if (doc.legacyPdf) void this.adoptLegacyPdf(doc.legacyPdf);
         this.paper = doc.paper;
         this.layout = doc.layout;
         this.thumbnail.reset(doc.layout);
@@ -366,7 +362,6 @@ export default class InkSurface {
             texts: this.texts,
             opaque: this.opaque,
             sheets: this.pages.sizes,
-            legacyPdf: this.legacyPdf,
             extra: this.extra
         });
     }
@@ -395,8 +390,7 @@ export default class InkSurface {
 
     /** The URLs of the PDFs whose pages lie on the sheets of the note. */
     getPdfs() {
-        const urls = getPdfUrls(this.pages.sizes);
-        return this.legacyPdf && !urls.includes(this.legacyPdf) ? [ ...urls, this.legacyPdf ] : urls;
+        return getPdfUrls(this.pages.sizes);
     }
 
     /**
@@ -436,7 +430,6 @@ export default class InkSurface {
      */
     removePdf(url: string) {
         if (!this.getPdfs().includes(url)) return;
-        if (this.legacyPdf === url) this.legacyPdf = undefined;
         this.pdf.close(url);
         this.setSheets(this.pages.sizes.map(({ width, height, source }) =>
             (source && source.url !== url ? { width, height, source } : { width, height })));
@@ -453,20 +446,6 @@ export default class InkSurface {
         this.redrawAll();
         this.images.updateBox();
         this.reportState();
-    }
-
-    /**
-     * Gives a note saved with the PDF at `url` and no sheets a sheet for each page of the PDF,
-     * from the first, once the PDF is open.
-     */
-    private async adoptLegacyPdf(url: string) {
-        const { generation } = this;
-        const pdf = await this.pdf.open(url);
-        if (!pdf || generation !== this.generation || this.legacyPdf !== url) return;
-        this.legacyPdf = undefined;
-        this.setSheets(pdf.sizes.map((size, page) => ({ ...size, source: { url, page } })));
-        this.showView("content");
-        if (!this.readOnly) this.options.onChange();
     }
 
     /**

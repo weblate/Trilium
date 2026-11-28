@@ -72,7 +72,7 @@ describe("rectangle recognition", () => {
 
         // A rectangle drawn by hand, with sides that lean, is level and as large as its mean sides.
         const stroke = { c: "auto", w: 3, p: PEN_RECTANGLE };
-        const { points } = parseInkDocument(JSON.stringify({ version: 1, strokes: [ stroke ] })).strokes[0];
+        const { points } = parseInkDocument(JSON.stringify({ version: 2, objects: [ stroke ] })).strokes[0];
         expect(rounded(recognizeRectangle(points, 20)))
             .toEqual([ [ 343, 162 ], [ 343, 244 ], [ 453, 162 ], [ 453, 244 ] ]);
 
@@ -187,7 +187,7 @@ describe("ellipse recognition", () => {
         expect(lumpy?.angle).toBe(0);
 
         // A circle drawn with a pen runs past its start, inside the loop, which leaves the fit alone.
-        const { points } = parseInkDocument(JSON.stringify({ version: 1, strokes: [ { w: 3, p: PEN_CIRCLE } ] })).strokes[0];
+        const { points } = parseInkDocument(JSON.stringify({ version: 2, objects: [ { w: 3, p: PEN_CIRCLE } ] })).strokes[0];
         expect(rounded(recognizeEllipse(points, 20))).toEqual([ 582, 255, 33, 27, -23 ]);
 
         // Drawn almost level or almost upright, an ellipse lies along the axes.
@@ -266,7 +266,7 @@ describe("arrow recognition", () => {
         expect(rounded(recognizeArrow(drawn, 20))).toEqual([ 300, 100, 100, 100, 41, 28 ]);
 
         // An arrow drawn with a pen comes back to its tip further out than it first got there.
-        const { points } = parseInkDocument(JSON.stringify({ version: 1, strokes: [ { w: 3, p: PEN_ARROW } ] })).strokes[0];
+        const { points } = parseInkDocument(JSON.stringify({ version: 2, objects: [ { w: 3, p: PEN_ARROW } ] })).strokes[0];
         expect(rounded(recognizeArrow(points, 20))).toEqual([ 318, 215, 178, 218, 44, 27 ]);
     });
 

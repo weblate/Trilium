@@ -173,11 +173,6 @@ export interface InkDocument {
      * sheets after them are A4.
      */
     sheets?: SheetSpec[];
-    /**
-     * The PDF of a note saved before sheets had sizes, whose pages lie on the first sheets. The
-     * surface gives the note sheets for them once the PDF is open.
-     */
-    legacyPdf?: string;
     /** The view the note was last saved at. */
     view?: InkView;
 }
@@ -193,8 +188,6 @@ interface SerializedDocument {
     version: number;
     paper: PaperStyle;
     layout?: InkLayout;
-    /** The PDF of a note saved before `pdfs`, whose page `n` lies on sheet `n`. */
-    pdf?: string;
     /** The URLs of the PDFs whose pages lie on sheets. */
     pdfs?: string[];
     /**
@@ -208,15 +201,11 @@ interface SerializedDocument {
      */
     objects: unknown[];
     view?: InkView;
-    /** The strokes, the images and the text boxes of a note saved before `objects`. */
-    strokes?: unknown[];
-    images?: unknown[];
-    texts?: unknown[];
 }
 
 /** The fields of a saved document and of each kind of object that this build reads. */
 const DOCUMENT_FIELDS = new Set<string>([
-    "version", "paper", "layout", "view", "pdf", "pdfs", "sheets", "objects", "strokes", "images", "texts"
+    "version", "paper", "layout", "view", "pdfs", "sheets", "objects"
 ] satisfies (keyof SerializedDocument)[]);
 const STROKE_FIELDS = new Set([ "id", "at", "t", "c", "w", "s", "k", "p" ]);
 const IMAGE_FIELDS = new Set([ "o", "id", "at", "url", "x", "y", "w", "h" ]);
@@ -266,7 +255,6 @@ export interface SavedInkDocument {
     texts?: Iterable<InkTextBox>;
     opaque?: Iterable<OpaqueObject>;
     sheets?: SheetSpec[];
-    legacyPdf?: string;
     extra?: Record<string, unknown>;
 }
 
@@ -276,8 +264,7 @@ export interface SavedInkDocument {
  * not encode every point again.
  */
 export function serializeInkDocument({
-    paper, layout = "pages", view, strokes, images = [], texts = [], opaque = [], sheets = [], legacyPdf,
-    extra = {}
+    paper, layout = "pages", view, strokes, images = [], texts = [], opaque = [], sheets = [], extra = {}
 }: SavedInkDocument): string {
     const objects: OpaqueObject[] = [ ...opaque ];
     for (const stroke of strokes) {
@@ -297,7 +284,6 @@ export function serializeInkDocument({
         paper,
         layout,
         ...(view && { view: { x: round(view.x, 10), y: round(view.y, 10), zoom: round(view.zoom, 1000) } }),
-        ...(legacyPdf && { pdf: legacyPdf }),
         ...(pdfs.length && { pdfs }),
         ...(sheets.length && {
             sheets: sheets.map(({ width, height, source }) => [
@@ -363,9 +349,8 @@ export function parseInkDocument(content: string | null | undefined): InkDocumen
         return empty;
     }
     if (!isRecord(raw)) return empty;
-    const version = isFiniteNumber(raw.version) ? raw.version : 1;
-    const saved = Array.isArray(raw.objects) ? raw.objects : getLegacyObjects(raw);
-    if (!saved) return { ...empty, version };
+    const version = isFiniteNumber(raw.version) ? raw.version : HANDWRITING_FORMAT_VERSION;
+    const saved = Array.isArray(raw.objects) ? raw.objects : [];
 
     const strokes: Stroke[] = [];
     const images: InkImage[] = [];
@@ -400,41 +385,18 @@ export function parseInkDocument(content: string | null | undefined): InkDocumen
     }
 
     const paper = PAPER_STYLES.includes(raw.paper as PaperStyle) ? raw.paper as PaperStyle : "ruled";
-    // A note saved before pages existed keeps its drawing on a canvas without bounds.
-    const layout = INK_LAYOUTS.includes(raw.layout as InkLayout)
-        ? raw.layout as InkLayout
-        : strokes.length ? "infinite" : "pages";
+    const layout = INK_LAYOUTS.includes(raw.layout as InkLayout) ? raw.layout as InkLayout : "pages";
     const isPdfUrl = (url: unknown): url is string => typeof url === "string" && PDF_URL_PATTERN.test(url);
-    const single = isPdfUrl(raw.pdf) ? raw.pdf : undefined;
     const sheets = parseSheets(raw.sheets, Array.isArray(raw.pdfs)
         ? raw.pdfs.map((url) => (isPdfUrl(url) ? url : undefined))
         : undefined);
-    // Before `pdfs`, the sheets were those of the one PDF, in the order of its pages.
-    if (single && !Array.isArray(raw.pdfs)) {
-        for (const [ page, sheet ] of sheets.entries()) {
-            sheet.source = { url: single, page };
-        }
-    }
-    const legacyPdf = sheets.length ? undefined : single;
     const extra = getExtra(raw, DOCUMENT_FIELDS);
     return {
         version, paper, layout, strokes, images, texts,
         view: parseView(raw.view),
         ...(opaque.length && { opaque }), ...(extra && { extra }),
-        ...(sheets.length && { sheets }), ...(legacyPdf && { legacyPdf })
+        ...(sheets.length && { sheets })
     };
-}
-
-/**
- * Returns the objects of a document saved before `objects`, in the order in which the surface
- * draws them: the images, then the strokes, then the text boxes. Returns `undefined` for a
- * document without strokes, which is not such a document.
- */
-function getLegacyObjects(raw: Partial<SerializedDocument>) {
-    if (!Array.isArray(raw.strokes)) return undefined;
-    const withKind = (objects: unknown, o: string) => (Array.isArray(objects) ? objects : [])
-        .map((object) => (isRecord(object) ? { ...object, o } : object));
-    return [ ...withKind(raw.images, "image"), ...raw.strokes, ...withKind(raw.texts, "text") ];
 }
 
 /** Returns the fields of `saved` that are not among `fields`, or `undefined` when it has none. */

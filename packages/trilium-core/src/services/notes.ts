@@ -587,7 +587,7 @@ export function checkImageAttachments(note: BNote, content: string) {
                 { pattern: /api\/attachments\/([a-zA-Z0-9_]+)\/image/g },
                 // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
                 { pattern: /attachmentId=([a-zA-Z0-9_]+)/g },
-                // "pdf":"api/attachments/{id}/open", the PDF that a handwriting note has as its paper
+                // "pdfs":["api/attachments/{id}/open"], the PDFs whose pages lie on a handwriting note's sheets
                 ...(note.isHandwriting() ? [ { pattern: /api\/attachments\/([a-zA-Z0-9_]+)\/open/g } ] : [])
             ]
             : [
@@ -1134,23 +1134,19 @@ function collectMindMapLinks(value: unknown, foundLinks: FoundLink[]) {
 
 /**
  * Finds the notes that the text boxes of a handwriting note link to, from the HTML of each box.
- * The boxes are the `objects` whose `o` is `"text"`, or the `texts` of a note saved before
- * `objects`.
+ * The boxes are the `objects` whose `o` is `"text"`.
  */
 function findHandwritingLinks(content: string, foundLinks: FoundLink[]) {
     type SavedObject = { o?: unknown, html?: unknown } | null;
-    let saved: { objects?: unknown, texts?: unknown };
+    let saved: { objects?: unknown };
     try {
         saved = JSON.parse(content) ?? {};
     } catch {
         return;
     }
     const objects: SavedObject[] = Array.isArray(saved.objects) ? saved.objects : [];
-    const texts: SavedObject[] = Array.isArray(saved.texts)
-        ? saved.texts
-        : objects.filter((object) => object?.o === "text");
-    for (const text of texts) {
-        if (typeof text?.html === "string") findInternalLinks(text.html, foundLinks);
+    for (const object of objects) {
+        if (object?.o === "text" && typeof object.html === "string") findInternalLinks(object.html, foundLinks);
     }
 }
 

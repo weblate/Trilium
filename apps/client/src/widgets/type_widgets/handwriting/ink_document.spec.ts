@@ -77,19 +77,17 @@ describe("ink document", () => {
         expect(parseInkDocument(content).view).toEqual({ x: 12.3, y: -6.8, zoom: 0.833 });
         expect(parseInkDocument(serializeInkDocument({ paper: "ruled", strokes: [] })).view).toBeUndefined();
         for (const view of [ { x: 1, y: 2 }, { x: 1, y: "2", zoom: 1 }, { x: 1, y: 2, zoom: 0 }, [] ]) {
-            expect(parseInkDocument(JSON.stringify({ strokes: [], view })).view).toBeUndefined();
+            expect(parseInkDocument(JSON.stringify({ objects: [], view })).view).toBeUndefined();
         }
     });
 
-    it("keeps the layout, and opens a note saved before pages on a canvas without bounds", () => {
+    it("keeps the layout, and lays out a note without a known one in pages", () => {
         const stroke = makeStroke([ 1, 2, 0.5 ]);
         expect(parseInkDocument(serializeInkDocument({ paper: "ruled", strokes: [ stroke ], layout: "infinite" })).layout).toBe("infinite");
         expect(parseInkDocument(serializeInkDocument({ paper: "ruled", strokes: [ stroke ] })).layout).toBe("pages");
 
-        const older = { version: 1, paper: "ruled", strokes: [ JSON.parse(serializeStroke(stroke)) ] };
-        expect(parseInkDocument(JSON.stringify(older)).layout).toBe("infinite");
-        expect(parseInkDocument(JSON.stringify({ ...older, strokes: [] })).layout).toBe("pages");
-        expect(parseInkDocument(JSON.stringify({ ...older, layout: "scroll" })).layout).toBe("infinite");
+        const unknown = { version: 2, paper: "ruled", layout: "scroll", objects: [ JSON.parse(serializeStroke(stroke)) ] };
+        expect(parseInkDocument(JSON.stringify(unknown)).layout).toBe("pages");
     });
 
     it("saves the images in drawing order, and reads back only those of the note's attachments", () => {
@@ -109,7 +107,7 @@ describe("ink document", () => {
         expect(new PageLayout().getPageCount(images)).toBe(3);
 
         const rect = { x: 0, y: 0, w: 10, h: 10 };
-        const parsed = parseInkDocument(JSON.stringify({ version: 1, paper: "ruled", strokes: [], images: [
+        const parsed = parseInkDocument(JSON.stringify({ version: 2, paper: "ruled", objects: [
             { ...rect, url: "https://example.com/tracker.png" },
             { ...rect, url: "api/attachments/abc/image/a.png?x=1" },
             { ...rect, url: "api/attachments/abc/image/../../notes/a" },
@@ -117,9 +115,9 @@ describe("ink document", () => {
             { ...rect, url, x: "1" },
             null,
             { ...rect, url }
-        ] }));
+        ].map((image) => image && { o: "image", ...image }) }));
         expect(parsed.images).toHaveLength(1);
-        expect(parseInkDocument(JSON.stringify({ version: 1, strokes: [], images: "none" })).images).toEqual([]);
+        expect(parseInkDocument(JSON.stringify({ version: 2, objects: "none" })).images).toEqual([]);
     });
 
     it("saves the page of a PDF that lies on each sheet, and reads back only the note's attachments", () => {
@@ -139,7 +137,7 @@ describe("ink document", () => {
         expect(parseInkDocument(saved).sheets).toEqual(sheets);
 
         // A sheet keeps its size without a page that names no PDF of the note.
-        const parse = (content: object) => parseInkDocument(JSON.stringify({ version: 1, strokes: [], ...content }));
+        const parse = (content: object) => parseInkDocument(JSON.stringify({ version: 2, objects: [], ...content }));
         expect(parse({
             pdfs: [ "https://example.com/a.pdf", slides, "api/attachments/abc/open?x=1" ],
             sheets: [ [ 500, 500, 0, 0 ], [ 500, 500, 1, 2 ], [ 500, 500, 2, 0 ], [ 500, 500, 7, 0 ], [ 500, 500, 1, -1 ], [ 500, 500, 1.5, 0 ] ]
@@ -147,18 +145,6 @@ describe("ink document", () => {
             { width: 500, height: 500 }, { width: 500, height: 500, source: { url: slides, page: 2 } },
             { width: 500, height: 500 }, { width: 500, height: 500 }, { width: 500, height: 500 }, { width: 500, height: 500 }
         ]);
-
-        // A note saved with one PDF has its pages on its sheets in order, and one saved before
-        // sheets had sizes names the PDF for the surface to give it sheets.
-        expect(parse({ pdf: slides, sheets: [ [ 1280, 720 ], [ 1280, 720 ] ] })).toMatchObject({ sheets: [
-            { width: 1280, height: 720, source: { url: slides, page: 0 } },
-            { width: 1280, height: 720, source: { url: slides, page: 1 } }
-        ] });
-        expect(parse({ pdf: slides })).toMatchObject({ legacyPdf: slides });
-        expect(JSON.parse(serializeInkDocument({ paper: "ruled", strokes: [], legacyPdf: slides })).pdf).toBe(slides);
-        for (const other of [ "https://example.com/a.pdf", "api/attachments/abc/open?x=1", "api/notes/abc/open", 5 ]) {
-            expect(parse({ pdf: other })).not.toHaveProperty("legacyPdf");
-        }
         expect(parse({ sheets: [ [ 500, 500 ] ] }).sheets).toEqual([ { width: 500, height: 500 } ]);
     });
 
@@ -172,24 +158,26 @@ describe("ink document", () => {
         const sized = serializeInkDocument({ paper: "ruled", strokes: [], texts: [ { ...box, fontSize: 12.04 } ] });
         expect(JSON.parse(sized).objects[0]).toMatchObject({ s: 12 });
         expect(parseInkDocument(sized).texts?.[0].fontSize).toBe(12);
-        const sizes = parseInkDocument(JSON.stringify({ version: 1, strokes: [], texts: [
+        const texts = (boxes: (Record<string, unknown> | null)[]) => parseInkDocument(JSON.stringify({
+            version: 2, objects: boxes.map((box) => box && { o: "text", ...box })
+        })).texts;
+        const sizes = texts([
             { id: "a", x: 0, y: 0, w: 10, html: "", s: 0.5 },
             { id: "b", x: 0, y: 0, w: 10, html: "", s: 9000 },
             { id: "c", x: 0, y: 0, w: 10, html: "", s: "12" },
             { id: "d", x: 0, y: 0, w: 10, html: "", s: -3 }
-        ] })).texts?.map(({ fontSize }) => fontSize);
+        ])?.map(({ fontSize }) => fontSize);
         expect(sizes).toEqual([ 4, 400, undefined, undefined ]);
 
-        const parsed = parseInkDocument(JSON.stringify({ version: 1, strokes: [], texts: [
+        // No two boxes share an ID.
+        expect(texts([
             { noteId: "abc", x: 0, y: 0, w: 10 },
             { id: "abc", x: 0, y: 0, w: 0, html: "" },
             { id: "abc", x: 0, y: 0, w: 10 },
             null,
             { id: "abc", x: 1, y: 2, w: 10, html: "<p>a</p>" },
             { id: "abc", x: 5, y: 5, w: 10, html: "<p>b</p>" }
-        ] }));
-        // The boxes of a note saved before `objects` lie over its strokes, and no two share an ID.
-        expect(parsed.texts).toEqual([
+        ])).toEqual([
             { id: "abc", order: 4, x: 1, y: 2, width: 10, html: "<p>a</p>" },
             { id: "abc_", order: 5, x: 5, y: 5, width: 10, html: "<p>b</p>" }
         ]);
@@ -216,11 +204,9 @@ describe("ink document", () => {
         expect(parsed.texts?.map(({ id, order }) => [ id, order ])).toEqual([ [ "box", 3 ] ]);
         expect(serializeInkDocument({ ...parsed, layout: "pages" })).toBe(saved);
 
-        // A note saved before `objects` has its images under its strokes, and its objects take
-        // IDs from their places, which are the same each time it is read.
-        const older = JSON.stringify({ version: 1, paper: "ruled", images: [ { url, x: 0, y: 0, w: 10, h: 10 } ], strokes: [ { w: 4, p: [ 0, 0, 128 ] } ] });
-        for (const read of [ parseInkDocument(older), parseInkDocument(older) ]) {
-            expect(read.version).toBe(1);
+        // Objects without an ID take one from their place, which is the same each time it is read.
+        const unnamed = JSON.stringify({ version: 2, paper: "ruled", objects: [ { o: "image", url, x: 0, y: 0, w: 10, h: 10 }, { w: 4, p: [ 0, 0, 128 ] } ] });
+        for (const read of [ parseInkDocument(unnamed), parseInkDocument(unnamed) ]) {
             expect([ ...read.images ?? [], ...read.strokes ].map(({ id, order }) => [ id, order ])).toEqual([ [ "i1", 0 ], [ "s2", 1 ] ]);
         }
     });
@@ -251,14 +237,14 @@ describe("ink document", () => {
         expect(parsed.version).toBe(2);
         expect(parseInkDocument(JSON.stringify({ version: 3, paper: "ruled", objects: [] })).version).toBe(3);
         expect(parseInkDocument(JSON.stringify({ version: 3, pages: [] })).version).toBe(3);
-        expect(parseInkDocument(JSON.stringify({ strokes: [] })).version).toBe(1);
+        expect(parseInkDocument(JSON.stringify({ objects: [] })).version).toBe(2);
     });
 
     it("falls back to an empty ruled page for missing or broken content", () => {
-        for (const content of [ "", null, "{", "{}", JSON.stringify({ strokes: [ { p: [ 1 ] } ] }) ]) {
+        for (const content of [ "", null, "{", "{}", JSON.stringify({ objects: [ { p: [ 1 ] } ] }) ]) {
             expect(parseInkDocument(content)).toMatchObject({ paper: "ruled", layout: "pages", strokes: [], images: [], texts: [] });
         }
-        expect(parseInkDocument(JSON.stringify({ paper: "plaid", strokes: [] })).paper).toBe("ruled");
+        expect(parseInkDocument(JSON.stringify({ paper: "plaid", objects: [] })).paper).toBe("ruled");
     });
 
     it("keeps the width of a saved stroke within the tools' range and drops strokes with bad points", () => {
@@ -270,7 +256,7 @@ describe("ink document", () => {
             { w: 2, p: [ 0, 0, 128, 1e308, 1e308, 0, 1e308, 1e308, 0 ] },
             { w: 2, p: [ 0, 0, null ] }
         ];
-        const parsed = parseInkDocument(JSON.stringify({ version: 1, strokes })).strokes;
+        const parsed = parseInkDocument(JSON.stringify({ version: 2, objects: strokes })).strokes;
         expect(parsed.map((stroke) => stroke.size)).toEqual([ 60, 3, 3 ]);
     });
 
@@ -320,13 +306,13 @@ describe("ink document", () => {
 
         // The default is left out, and a stroke saved without one outlines as before the setting.
         expect(JSON.parse(serializeStroke(pen(60)))).not.toHaveProperty("k");
-        const [ older ] = parseInkDocument(JSON.stringify({ strokes: [ { w: 4, p: [ 0, 0, 128, 10, 0, 255 ] } ] })).strokes;
+        const [ older ] = parseInkDocument(JSON.stringify({ objects: [ { w: 4, p: [ 0, 0, 128, 10, 0, 255 ] } ] })).strokes;
         expect(older.sensitivity).toBeUndefined();
         expect(getStrokeOutline(pen())).toEqual(outlineAt(0.6));
 
         // A saved value out of range is brought back into it, and one that is not a number is dropped.
         const saved = [ 150, -5, "40" ].map((k) => ({ w: 4, k, p: [ 0, 0, 128 ] }));
-        expect(parseInkDocument(JSON.stringify({ strokes: saved })).strokes.map((stroke) => stroke.sensitivity))
+        expect(parseInkDocument(JSON.stringify({ objects: saved })).strokes.map((stroke) => stroke.sensitivity))
             .toEqual([ 100, 0, undefined ]);
 
         // The highlighter keeps its width whatever the pressure.
@@ -460,7 +446,7 @@ describe("PageLayout", () => {
         expect(parseInkDocument(saved).sheets).toEqual([ { width: 1280, height: 720 }, { width: 400, height: 300.3 } ]);
         expect(serializeInkDocument({ paper: "ruled", strokes: [] })).not.toContain("sheets");
 
-        const parse = (sheets: unknown) => parseInkDocument(JSON.stringify({ version: 1, strokes: [], sheets })).sheets;
+        const parse = (sheets: unknown) => parseInkDocument(JSON.stringify({ version: 2, objects: [], sheets })).sheets;
         expect(parse([ [ 500, 500 ], [ 0, 500 ], [ 600, 600 ] ])).toEqual([ { width: 500, height: 500 } ]);
         expect(parse([ [ 500, 1e9 ] ])).toBeUndefined();
         expect(parse("A4")).toBeUndefined();

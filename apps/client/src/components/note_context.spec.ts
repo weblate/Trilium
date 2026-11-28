@@ -86,7 +86,7 @@ describe("NoteContext read-only capability", () => {
 
     it("keeps a large handwriting note editable, which a code note of that size is not", async () => {
         options.load({ autoReadonlySizeCode: 100 });
-        const content = JSON.stringify({ version: 1, paper: "blank", strokes: [ { w: 3, p: Array(100).fill(1) } ] });
+        const content = JSON.stringify({ version: 2, paper: "blank", objects: [ { id: "s1", w: 3, p: Array(100).fill(1) } ] });
         const code = buildNote({ title: "Script", type: "code", mime: "application/javascript", content });
         noteContext.noteId = code.noteId;
         expect(await noteContext.isReadOnly()).toBe(true);
