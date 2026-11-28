@@ -119,6 +119,12 @@ export function setupTriliumAppProtocol(app: Application | Promise<Application>)
  * - DevTools frames are allowed so source-map fetches for `trilium-app://`
  *   scripts keep working; page content can never navigate a frame to the
  *   privileged `devtools://` scheme.
+ * - A request with no frame at all is allowed only as a `GET`/`HEAD` of the
+ *   static bundle (`isPublicAssetRequest`). Electron reports a dedicated
+ *   worker's requests with no frame, no `webContentsId` and no referrer, so the
+ *   app's own workers (MapLibre, Excalidraw, PDF.js) look exactly like a
+ *   foreign frame's worker. The bundle is what a server install serves without
+ *   a login, so this exposes nothing, while the API stays closed to workers.
  *
  * `<webview>` guests are out of scope by construction: they live in a
  * dedicated session partition where the `trilium-app://` handler is not even
@@ -138,7 +144,8 @@ function installFrameOriginGuard() {
             frameUrls = ["<disposed frame>"];
         }
 
-        const allowed = isRequestorChainTrusted(details.resourceType, frameUrls);
+        const allowed = isRequestorChainTrusted(details.resourceType, frameUrls)
+            || (frameUrls.length === 0 && isPublicAssetRequest(details.method, details.url));
         if (!allowed) {
             console.error(`[trilium-app] blocked ${details.method} ${details.url} from frame chain [${frameUrls.join(" ← ")}]`);
         } else if (isFirstPaintGateUrl(details.url)) {
@@ -160,6 +167,28 @@ export function isRequestorChainTrusted(resourceType: string, frameUrls: string[
         return false;
     }
     return committed.every(isTrustedFrameUrl);
+}
+
+/**
+ * Path prefixes of the static bundle: the client (`/assets/`, `/src/`) and the PDF.js viewer
+ * (`/pdfjs/`). `apps/server/src/routes/assets.ts` mounts them without an auth check.
+ */
+const PUBLIC_ASSET_PREFIXES = [ "/assets/", "/src/", "/pdfjs/" ];
+
+/**
+ * Whether a request reads a file of the static bundle, which {@link installFrameOriginGuard}
+ * allows without a frame. Checks the path `dispatch()` hands Express, as `new URL()` resolves
+ * `..` and `%2e%2e` segments for both.
+ */
+export function isPublicAssetRequest(method: string, rawUrl: string): boolean {
+    if (method !== "GET" && method !== "HEAD") {
+        return false;
+    }
+    if (!isTriliumAppShellUrl(rawUrl)) {
+        return false;
+    }
+    const { pathname } = new URL(rawUrl);
+    return PUBLIC_ASSET_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
 function isTrustedFrameUrl(frameUrl: string): boolean {

@@ -854,6 +854,38 @@ describe("trilium-app protocol dispatcher", () => {
             expect(decide(listener, "xhr", undefined)).toBe(true);
         });
 
+        it("lets a frameless worker load its script from the static bundle only", async () => {
+            const { listener } = await installGuard();
+            const APP = "trilium-app://app";
+            const cancels = (method: string, url: string, frame?: ReturnType<typeof frameChain>) => {
+                let cancelled: boolean | undefined;
+                const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+                const details = { method, url, resourceType: "script", frame };
+                listener(details, ({ cancel }) => { cancelled = cancel; });
+                errorSpy.mockRestore();
+                return cancelled;
+            };
+
+            // The worker scripts of MapLibre, Excalidraw and PDF.js, which arrive without a frame.
+            expect(cancels("GET", `${APP}/assets/maplibre-gl-worker-DddZ4Wha.js`)).toBe(false);
+            expect(cancels("GET", `${APP}/src/subset-worker.chunk-DkwKH7Fa.js`)).toBe(false);
+            expect(cancels("GET", `${APP}/pdfjs/build/pdf.worker.mjs?v=1`)).toBe(false);
+            expect(cancels("HEAD", `${APP}/assets/x.js`)).toBe(false);
+
+            // A worker's API call looks the same whether the app or a foreign frame started it.
+            expect(cancels("GET", `${APP}/api/notes/root`)).toBe(true);
+            expect(cancels("POST", `${APP}/assets/x.js`)).toBe(true);
+            expect(cancels("GET", `${APP}/`)).toBe(true);
+            expect(cancels("GET", `${APP}/assets/../api/notes/root`)).toBe(true);
+            expect(cancels("GET", `${APP}/src/%2e%2e/api/notes/root`)).toBe(true);
+            expect(cancels("GET", `${APP}//assets/x.js`)).toBe(true);
+            expect(cancels("GET", `${APP}/assetsx/x.js`)).toBe(true);
+            expect(cancels("GET", "trilium-app://evil/assets/x.js")).toBe(true);
+            // A frame that is not the app's still decides on its own, even for a bundle file.
+            expect(cancels("GET", `${APP}/assets/x.js`, frameChain("http://evil.example/"))).toBe(true);
+            expect(cancels("GET", `${APP}/assets/x.js`, frameChain("<disposed frame>"))).toBe(true);
+        });
+
         it("holds the first-paint gate script of an armed window until its renderer releases it", async () => {
             const { listener } = await installGuard();
             armFirstPaintGate({ id: 41, once: vi.fn() } as unknown as WebContents);
