@@ -7245,7 +7245,7 @@
                                 {
                                     "type": "label",
                                     "name": "iconClass",
-                                    "value": "bx bx-pen",
+                                    "value": "bx bx-chalkboard",
                                     "isInheritable": false,
                                     "position": 10
                                 },

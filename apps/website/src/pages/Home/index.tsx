@@ -31,7 +31,7 @@ import geomapIcon from "../../assets/boxicons/bx-map.svg?raw";
 import mindmapIcon from "../../assets/boxicons/bx-network-chart.svg?raw";
 import textNoteIcon from "../../assets/boxicons/bx-note.svg?raw";
 import webClipperIcon from "../../assets/boxicons/bx-paperclip.svg?raw";
-import canvasIcon from "../../assets/boxicons/bx-pen.svg?raw";
+import canvasIcon from "../../assets/boxicons/bx-whiteboard.svg?raw";
 import printerIcon from "../../assets/boxicons/bx-printer.svg?raw";
 import syncIcon from "../../assets/boxicons/bx-refresh-cw.svg?raw";
 import botIcon from "../../assets/boxicons/bx-robot.svg?raw";

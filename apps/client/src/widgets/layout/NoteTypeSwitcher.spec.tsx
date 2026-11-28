@@ -109,7 +109,7 @@ describe("NoteTypeSwitcher", () => {
 
         const icons = [ ...host.querySelectorAll(".ext-badge > .bx:first-child, .ext-badge .bx:not(.arrow)") ]
             .map((icon) => [ ...icon.classList ].find((name) => name !== "bx"));
-        expect(icons).toEqual([ "bxl-markdown", "bx-pen", "bx-code", "bx-book", "bx-copy-alt", "bx-dots-vertical-rounded" ]);
+        expect(icons).toEqual([ "bxl-markdown", "bx-chalkboard", "bx-code", "bx-book", "bx-copy-alt", "bx-dots-vertical-rounded" ]);
     });
 });
 

@@ -44,7 +44,7 @@ export const NOTE_TYPES: NoteTypeMapping[] = [
     { type: "book", mime: "", title: t("note_types.book"), icon: "bx-book" },
 
     // Graphic notes
-    { type: "canvas", mime: "application/json", title: t("note_types.canvas"), icon: "bx-pen" },
+    { type: "canvas", mime: "application/json", title: t("note_types.canvas"), icon: "bx-chalkboard" },
     { type: "code", mime: HANDWRITING_MIME, title: t("note_types.handwriting"), icon: "bx-pencil", isBeta: true, isNew: true },
     { type: "mermaid", mime: "text/mermaid", title: t("note_types.mermaid-diagram"), icon: "bx-selection" },
 
