@@ -37,6 +37,29 @@ describe("findExcerpts", () => {
         expect(excerpts[0]).not.toContain(" end…");
         expect(excerpts[1]).toContain(`<a href="#root/excSplit" class="backlink-link">two</a>`);
     });
+
+    it("quotes a link whose address carries parameters, and matches the note ID as a path segment", () => {
+        const html = `<p><a href="#root/excParam?block=b1">block</a></p>` +
+            `<p><a href="#root/excParent/excParam?block=b1">nested</a></p>` +
+            `<p><a href="http://localhost:8080/#root/excParam/">absolute</a></p>` +
+            `<p><a href="#root/excParam/xexcParam">longer ID</a></p>` +
+            `<p><a href="#root/xexcParam">prefixed ID</a></p>` +
+            `<p><a href="https://example.com/excParam">other site</a></p>` +
+            `<p><a>no address</a></p>` +
+            `<p><a href="">empty address</a></p>`;
+
+        const excerpts = findExcerpts(html, "excParam");
+
+        expect(excerpts).toHaveLength(1);
+        expect(excerpts[0]).toContain(`<a href="#root/excParam?block=b1" class="backlink-link">block</a>`);
+        expect(excerpts[0]).toContain(`<a href="#root/excParent/excParam?block=b1" class="backlink-link">nested</a>`);
+        expect(excerpts[0]).toContain(`<a href="http://localhost:8080/#root/excParam/" class="backlink-link">absolute</a>`);
+        expect(excerpts[0]).toContain(`<a href="#root/excParam/xexcParam">longer ID</a>`);
+        expect(excerpts[0]).toContain(`<a href="#root/xexcParam">prefixed ID</a>`);
+        expect(excerpts[0]).toContain(`<a href="https://example.com/excParam">other site</a>`);
+        expect(excerpts[0]).toContain("<a>no address</a>");
+        expect(excerpts[0]).toContain(`<a href="">empty address</a>`);
+    });
 });
 
 describe("findExcerpts with empty elements", () => {

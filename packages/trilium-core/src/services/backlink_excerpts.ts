@@ -3,7 +3,7 @@
  * referenced note, as `ck-content backlink-excerpt` fragments the backlinks UI renders.
  *
  * {@link findExcerpts} works on any HTML that marks its note links as `href="…#root…/<noteId>"`
- * anchors — a text note's content directly. {@link findLlmChatExcerpts} brings `llmChat` notes
+ * anchors, parameters such as `?block=<blockId>` aside — a text note's content directly. {@link findLlmChatExcerpts} brings `llmChat` notes
  * to that same shape first: their assistant prose is markdown, rendered to HTML through the
  * shared pipeline the chat UI uses, with wiki-link anchors retitled from note ID to note title.
  * {@link findMindMapExcerpts} has no prose to quote at all, a map's links belonging to its nodes,
@@ -30,7 +30,7 @@ export function findExcerpts(html: string, referencedNoteId: string): string[] {
 
     removeImages(document);
 
-    const linkEls = document.querySelectorAll("a").filter((el) => el.getAttribute("href")?.endsWith(referencedNoteId));
+    const linkEls = document.querySelectorAll("a").filter((el) => linksToNote(el.getAttribute("href"), referencedNoteId));
     for (const linkEl of linkEls) {
         linkEl.classList.add("backlink-link");
     }
@@ -111,6 +111,21 @@ export function findExcerpts(html: string, referencedNoteId: string): string[] {
         excerpts.push(`<div class="ck-content backlink-excerpt">${excerptEls.map(String).join("")}</div>`);
     }
     return excerpts;
+}
+
+/**
+ * Whether `href` links to the note `referencedNoteId`, read as `findInternalLinks()` in
+ * services/notes.ts reads it: the note ID is the last segment of the path after `#root/`, ahead
+ * of an optional trailing slash and any parameters (`#root/<parentId>/<noteId>?block=<blockId>`).
+ */
+function linksToNote(href: string | undefined, referencedNoteId: string) {
+    const rootIndex = href?.lastIndexOf("#root/") ?? -1;
+    if (!href || rootIndex === -1) {
+        return false;
+    }
+
+    const [ path ] = href.slice(rootIndex + "#root/".length).split(/[?#]/);
+    return path.split("/").filter(Boolean).at(-1) === referencedNoteId;
 }
 
 function isInside(node: ElementOrText, ancestors: Set<ElementOrText>) {
