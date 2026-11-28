@@ -38,6 +38,18 @@ function rnote(strokes: (object | null)[], times?: number[], document: Record<st
     })));
 }
 
+/** Returns the `[x, y]` positions of a saved stroke from its `p`, in world units. */
+function positions(encoded: number[]) {
+    const result: number[][] = [];
+    let [ x, y ] = [ 0, 0 ];
+    for (let i = 0; i < encoded.length; i += 3) {
+        x += encoded[i];
+        y += encoded[i + 1];
+        result.push([ x / 10, y / 10 ]);
+    }
+    return result;
+}
+
 function convert(file: Uint8Array) {
     const converted = convertRnote(file);
     if (!converted) throw new Error("The file was not converted.");
@@ -142,6 +154,7 @@ describe("convertRnote", () => {
             // Scaled to twice its size around (100, 50); RNote stores a negative extent as drawn.
             rect([ -20, 10 ], [ 2, 0, 0, 0, 2, 0, 100, 50, 1 ]),
             rect([ 0, 0 ], [ 1, 0, 0, 0, 1, 0, 5, 5, 1 ]),
+            // An ellipse without its transform.
             shape({ ellipse: { radii: [ 5, 5 ] } }),
             { textstroke: { text: "Title" } },
             { textstroke: { text: "Title" } },
@@ -172,6 +185,75 @@ describe("convertRnote", () => {
         expect(visited.filter((position) => corners.includes(position))).toEqual(corners);
         // Points crowd toward each corner, which keeps it sharp once the stroke is smoothed.
         expect(visited).toContain("60,31");
+    });
+
+    it("turns curves, ellipses, arrows, polylines and polygons into strokes", () => {
+        const shape = (shape: object, style: object = smooth({ stroke_width: 4 })) => (
+            { shapestroke: { shape, style } }
+        );
+        const CLEAR = { ...BLACK, a: 0 };
+        const transform = (scale: number, x: number, y: number) => (
+            { affine: [ scale, 0, 0, 0, scale, 0, x, y, 1 ] }
+        );
+        const { document, skipped } = convert(rnote([
+            // The curve under the title of RNote's own overview document, in its hand-drawn style.
+            shape(
+                { cubbez: {
+                    start: [ 0, 0 ], cp1: [ 0, 100 ], cp2: [ 100, 100 ], end: [ 100, 0 ]
+                } },
+                { rough: { stroke_color: BLACK, stroke_width: 4, fill_color: CLEAR, seed: 1 } }
+            ),
+            shape({ quadbez: { start: [ 0, 0 ], cp: [ 50, 100 ], end: [ 100, 0 ] } }),
+            // Radii of 20 by 10, scaled to twice that around (100, 50).
+            shape({ ellipse: { radii: [ 20, 10 ], transform: transform(2, 100, 50) } }),
+            shape({ arrow: { start: [ 0, 0 ], tip: [ 100, 0 ] } }),
+            shape({ arrow: { start: [ 0, 0 ], tip: [ 0, 20 ] } }),
+            shape({ polyline: { start: [ 0, 0 ], path: [ [ 10, 0 ], [ 10, 10 ] ] } }),
+            shape({ polygon: { start: [ 0, 0 ], path: [ [ 10, 0 ], [ 10, 10 ] ] } }),
+            // Shapes without the points they are drawn through.
+            shape({ cubbez: { start: [ 0, 0 ], cp1: [ 0, 100 ], end: [ 100, 0 ] } }),
+            shape({ polyline: { start: [ 0, 0 ], path: [] } }),
+            shape({ arrow: { start: [ 0, 0 ], tip: [ 0, 0 ] } }),
+            shape({ ellipse: { radii: [ 0, 10 ], transform: transform(1, 0, 0) } })
+        ]));
+        expect(skipped).toEqual({ shapestroke: 4 });
+        expect(document.strokes.map(({ w, k }: { w: number, k: number }) => [ w, k ]))
+            .toEqual(Array(7).fill([ 4, 0 ]));
+        const [ cubic, quadratic, ellipse, arrow, shortArrow, polyline, polygon ] =
+            document.strokes.map(({ p }: { p: number[] }) => positions(p));
+
+        // A curve runs between its ends through the point halfway along it.
+        expect([ cubic[0], cubic.at(-1) ]).toEqual([ [ 0, 0 ], [ 100, 0 ] ]);
+        expect(cubic).toContainEqual([ 50, 75 ]);
+        expect(cubic.length).toBeGreaterThan(20);
+        expect([ quadratic[0], quadratic.at(-1) ]).toEqual([ [ 0, 0 ], [ 100, 0 ] ]);
+        expect(quadratic).toContainEqual([ 50, 50 ]);
+
+        // The ellipse closes on itself, and every point lies on it.
+        expect(ellipse[0]).toEqual(ellipse.at(-1));
+        expect(ellipse).toContainEqual([ 140, 50 ]);
+        for (const [ x, y ] of ellipse) {
+            expect(Math.hypot((x - 100) / 40, (y - 50) / 20)).toBeCloseTo(1, 1);
+        }
+
+        // An arrow runs along its shaft to the tip, out along one barb at 45°, and by way of the
+        // tip again along the other. A barb is 32 long, or half the shaft when that is shorter.
+        const ENDS = [ "0,0", "100,0", "77.4,22.6", "77.4,-22.6", "0,20", "7.1,12.9", "-7.1,12.9" ];
+        const ends = (points: number[][]) => (
+            points.filter((point) => ENDS.includes(point.join(",")))
+        );
+        expect(ends(arrow))
+            .toEqual([ [ 0, 0 ], [ 100, 0 ], [ 77.4, 22.6 ], [ 100, 0 ], [ 77.4, -22.6 ] ]);
+        expect(ends(shortArrow))
+            .toEqual([ [ 0, 0 ], [ 0, 20 ], [ -7.1, 12.9 ], [ 0, 20 ], [ 7.1, 12.9 ] ]);
+
+        // A polyline ends where it was last drawn, and a polygon goes back to its start.
+        const corners = (points: number[][]) => (
+            points.filter(([ x, y ]) => x % 10 === 0 && y % 10 === 0)
+        );
+        expect(corners(polyline)).toEqual([ [ 0, 0 ], [ 10, 0 ], [ 10, 10 ] ]);
+        expect(corners(polygon)).toEqual([ [ 10, 0 ], [ 10, 10 ], [ 0, 0 ] ]);
+        expect(polygon[0]).toEqual(polygon.at(-1));
     });
 
     it("keeps the text boxes and the images where they are, next to the ink", () => {

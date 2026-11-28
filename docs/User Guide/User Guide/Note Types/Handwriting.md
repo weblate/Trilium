@@ -166,11 +166,11 @@ A document of [RNote](https://rnote.flxzt.net/) (a `.rnote` file) is imported as
 To keep an RNote document as it is, as a <a class="reference-link" href="File.md">File</a> note, turn off _Import RNote drawings as handwriting notes rather than files_ in the _Options_ of the import dialog.
 
 *   Pen strokes keep their position, color, thickness and pressure. Black ink becomes ink in the _Text color_, so it stays readable in a dark theme, and translucent ink becomes highlighter ink.
-*   Lines and rectangles drawn with the shape tool become ordinary ink.
+*   The shapes of the shape tool (lines, arrows, rectangles, ellipses, curves, polylines and polygons) become ordinary ink, drawn smooth even when RNote draws them in its rough style. A filled shape keeps only its outline.
 *   The note uses the infinite canvas, with the paper nearest to the background pattern of the document, and opens at the top of its ink, fitting its width.
 *   Images keep their position and size, and are saved as attachments of the note. A rotated image is imported upright.
 *   Typed text becomes text boxes at the same place, keeping its size, line breaks and colors, and its italic, bold, underlined and struck-through parts. The text takes the font of the note, so its lines can break at other words than in RNote.
-*   The other shapes, such as ellipses, and vector images are left out. A document with nothing that can be imported becomes a <a class="reference-link" href="File.md">File</a> note.
+*   Vector images, such as the pages of an imported PDF, are left out. A document with nothing that can be imported becomes a <a class="reference-link" href="File.md">File</a> note.
 
 ## Limitations
 

@@ -1,6 +1,7 @@
 import {
-    dropRepeatedPoints, encodePoints, lineToPoints, MAX_STROKE_SIZE, polygonToPoints, type SerializedImage,
-    serializeImportedHandwriting, type SerializedStroke, type SerializedTextBox, TEXT_BOX_PADDING
+    dropRepeatedPoints, encodePoints, lineToPoints, MAX_STROKE_SIZE, pathToPoints, polygonToPoints,
+    type SerializedImage, serializeImportedHandwriting, type SerializedStroke,
+    type SerializedTextBox, TEXT_BOX_PADDING
 } from "@triliumnext/commons";
 import { gunzipSync, zlibSync } from "fflate";
 
@@ -225,7 +226,10 @@ function convertShapeStroke(stroke: JsonRecord): SerializedStroke | undefined {
     return buildStroke(look, width, 0, points);
 }
 
-/** Returns the points of a stroke along a line or around a rectangle, or `undefined` for another shape. */
+/**
+ * Returns the points of a stroke along a shape of RNote's shape tool, or `undefined` for a shape
+ * it cannot read. A filled shape keeps only its outline.
+ */
 function getShapePoints(shape: JsonRecord): number[] | undefined {
     const line = asRecord(shape.line);
     if (line) {
@@ -233,6 +237,42 @@ function getShapePoints(shape: JsonRecord): number[] | undefined {
         const end = asPosition(line.end);
         if (!start || !end) return undefined;
         return lineToPoints({ fromX: start[0], fromY: start[1], toX: end[0], toY: end[1] }, EVEN_PRESSURE);
+    }
+
+    const cubic = asRecord(shape.cubbez);
+    const quadratic = asRecord(shape.quadbez);
+    if (cubic || quadratic) {
+        const controls = cubic
+            ? [ cubic.start, cubic.cp1, cubic.cp2, cubic.end ].map(asPosition)
+            : [ quadratic?.start, quadratic?.cp, quadratic?.end ].map(asPosition);
+        return controls.every(Boolean) ? bezierToPoints(controls as number[][]) : undefined;
+    }
+
+    const arrow = asRecord(shape.arrow);
+    if (arrow) {
+        const start = asPosition(arrow.start);
+        const tip = asPosition(arrow.tip);
+        return start && tip ? arrowToPoints(start, tip) : undefined;
+    }
+
+    const polyline = asRecord(shape.polyline);
+    const polygon = asRecord(shape.polygon);
+    const outline = polyline ?? polygon;
+    if (outline) {
+        const path = Array.isArray(outline.path) ? outline.path : [];
+        const vertices = [ outline.start, ...path ].map(asPosition);
+        if (vertices.length < 2 || !vertices.every(Boolean)) return undefined;
+        return polyline
+            ? pathToPoints(vertices as number[][], EVEN_PRESSURE)
+            : polygonToPoints(vertices as number[][], EVEN_PRESSURE);
+    }
+
+    const ellipse = asRecord(shape.ellipse);
+    if (ellipse) {
+        const radii = asPosition(ellipse.radii);
+        const affine = asRecord(ellipse.transform)?.affine;
+        if (!radii || !radii[0] || !radii[1] || !Array.isArray(affine)) return undefined;
+        return affine.every(isFiniteNumber) ? ellipseToPoints(radii, affine) : undefined;
     }
 
     const rect = asRecord(shape.rect);
@@ -250,6 +290,81 @@ function getShapePoints(shape: JsonRecord): number[] | undefined {
     });
     return polygonToPoints(corners, EVEN_PRESSURE);
 }
+
+/**
+ * Returns the points of a stroke along the Bézier curve of `controls`: its start, its one or two
+ * control points and its end. The count of points is even, so one lies halfway along the curve.
+ */
+function bezierToPoints(controls: number[][]) {
+    let length = 0;
+    for (let i = 1; i < controls.length; i++) {
+        const [ fromX, fromY ] = controls[i - 1];
+        length += Math.hypot(controls[i][0] - fromX, controls[i][1] - fromY);
+    }
+    const steps = Math.max(MIN_CURVE_POINTS, Math.min(MAX_CURVE_POINTS, length / CURVE_STEP));
+    const count = 2 * Math.ceil(steps / 2);
+    const points: number[] = [];
+    for (let step = 0; step <= count; step++) {
+        // De Casteljau's algorithm: the curve's point is the last one left after interpolating
+        // between neighboring points.
+        let level = controls;
+        while (level.length > 1) {
+            level = level.slice(1).map(([ x, y ], i) => [
+                level[i][0] + (x - level[i][0]) * step / count,
+                level[i][1] + (y - level[i][1]) * step / count
+            ]);
+        }
+        points.push(level[0][0], level[0][1], EVEN_PRESSURE);
+    }
+    return points;
+}
+
+/**
+ * Returns the points of a stroke along an arrow from `start` to `tip`: the shaft, one barb, and by
+ * way of the tip again the other. Each barb is at `ARROW_BARB_ANGLE` to the shaft and
+ * `ARROW_BARB_LENGTH` long, or half the shaft where that is shorter.
+ */
+function arrowToPoints([ fromX, fromY ]: number[], [ toX, toY ]: number[]) {
+    const shaft = Math.hypot(toX - fromX, toY - fromY);
+    if (!shaft) return undefined;
+    const length = Math.min(ARROW_BARB_LENGTH, shaft / 2);
+    const shaftAngle = Math.atan2(fromY - toY, fromX - toX);
+    const barb = (side: number) => {
+        const angle = shaftAngle + side * ARROW_BARB_ANGLE;
+        return [ toX + length * Math.cos(angle), toY + length * Math.sin(angle) ];
+    };
+    const vertices = [ [ fromX, fromY ], [ toX, toY ], barb(-1), [ toX, toY ], barb(1) ];
+    return pathToPoints(vertices, EVEN_PRESSURE);
+}
+
+/**
+ * Returns the points of a closed stroke around an ellipse of `radii` around the origin, placed by
+ * the 3x3 `affine` matrix, which is stored a column at a time.
+ */
+function ellipseToPoints([ radiusX, radiusY ]: number[], affine: number[]) {
+    const [ a, b, , c, d, , tx, ty ] = affine;
+    const longest = Math.max(
+        Math.abs(radiusX) * Math.hypot(a, b), Math.abs(radiusY) * Math.hypot(c, d)
+    );
+    const steps = Math.ceil(2 * Math.PI * longest / CURVE_STEP);
+    const count = Math.max(MIN_ELLIPSE_POINTS, Math.min(MAX_CURVE_POINTS, steps));
+    const points: number[] = [];
+    for (let step = 0; step <= count; step++) {
+        const x = radiusX * Math.cos(2 * Math.PI * step / count);
+        const y = radiusY * Math.sin(2 * Math.PI * step / count);
+        points.push(a * x + c * y + tx, b * x + d * y + ty, EVEN_PRESSURE);
+    }
+    return points;
+}
+
+/** The distance between the points of a curve or an ellipse, in world units, and their bounds. */
+const CURVE_STEP = 4;
+const MIN_CURVE_POINTS = 8;
+const MIN_ELLIPSE_POINTS = 24;
+const MAX_CURVE_POINTS = 200;
+/** The longest barb of an arrow, in world units, and its angle to the shaft. */
+const ARROW_BARB_LENGTH = 32;
+const ARROW_BARB_ANGLE = Math.PI / 4;
 
 /** Builds a saved stroke from flat `x, y, pressure` triples, without its repeated points. */
 function buildStroke(
